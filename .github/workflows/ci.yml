@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Lint
+        run: ruff check .
+      - name: Check formatting
+        run: ruff format --check .
+      - name: Run tests
+        run: pytest --cov=app --cov-report=term-missing
+
+  docker-smoke:
+    name: Docker smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build --tag url-shortener:ci .
+      - name: Start container with persistent storage
+        run: |
+          docker volume create url-shortener-ci-data
+          docker run --detach --name url-shortener-ci \
+            --publish 8000:8000 \
+            --volume url-shortener-ci-data:/data \
+            url-shortener:ci
+      - name: Wait for the API
+        run: |
+          curl --fail --silent --show-error \
+            --retry 20 --retry-delay 1 --retry-connrefused --retry-all-errors \
+            http://127.0.0.1:8000/docs > /dev/null
+      - name: Verify creation, redirect, and statistics
+        run: |
+          python3 - <<'PY'
+          import http.client
+          import json
+
+          def request(method, path, body=None):
+              connection = http.client.HTTPConnection("127.0.0.1", 8000, timeout=5)
+              try:
+                  connection.request(
+                      method,
+                      path,
+                      body=json.dumps(body) if body is not None else None,
+                      headers={"Content-Type": "application/json"},
+                  )
+                  response = connection.getresponse()
+                  return response.status, response.getheader("Location"), response.read()
+              finally:
+                  connection.close()
+
+          status, _, body = request("POST", "/links", {
+              "url": "https://example.com/smoke", "alias": "smoke-link"
+          })
+          assert status == 201, (status, body)
+          assert json.loads(body)["code"] == "smoke-link", body
+
+          status, location, body = request("GET", "/smoke-link")
+          assert status == 302, (status, body)
+          assert location == "https://example.com/smoke", location
+
+          status, _, body = request("GET", "/links/smoke-link/stats")
+          assert status == 200, (status, body)
+          stats = json.loads(body)
+          assert stats["total_clicks"] == 1, stats
+          assert stats["last_clicked_at"] is not None, stats
+          print("Creation, redirect, and click statistics passed.")
+          PY
+      - name: Restart container and verify persistence
+        run: |
+          docker restart url-shortener-ci
+          curl --fail --silent --show-error \
+            --retry 20 --retry-delay 1 --retry-connrefused --retry-all-errors \
+            http://127.0.0.1:8000/docs > /dev/null
+          python3 - <<'PY'
+          import json
+          from urllib.request import urlopen
+
+          with urlopen("http://127.0.0.1:8000/links/smoke-link/stats", timeout=5) as response:
+              assert response.status == 200, response.status
+              stats = json.load(response)
+          assert stats["code"] == "smoke-link", stats
+          assert stats["url"] == "https://example.com/smoke", stats
+          assert stats["total_clicks"] == 1, stats
+          assert stats["last_clicked_at"] is not None, stats
+          print("Link and click statistics persisted after restart.")
+          PY
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs url-shortener-ci 2>&1 || true
+      - name: Clean up
+        if: always()
+        run: |
+          docker rm --force url-shortener-ci || true
+          docker volume rm url-shortener-ci-data || true
