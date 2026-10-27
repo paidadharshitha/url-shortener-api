@@ -2,13 +2,23 @@
 
 [![CI](https://github.com/paidadharshitha/url-shortener-api/actions/workflows/ci.yml/badge.svg)](https://github.com/paidadharshitha/url-shortener-api/actions/workflows/ci.yml)
 
-A FastAPI and SQLite URL shortener with private workspaces, a browser dashboard, and click analytics. Version 2 adds accounts, QR downloads, CSV export, bulk creation, flexible analytics windows, and rate limits while preserving existing short links and click history.
+A Python URL-shortener service built with FastAPI and SQLite. Submit a long URL, share the returned short link, and track how many times it is opened. Optional aliases make addresses recognizable; expiry stops time-limited links from redirecting after their deadline.
 
-Create links with optional labels, aliases, and expiry; search and edit them; pause or resume redirects; and inspect per-link activity. The dashboard and API run in the same Python application, with no separate frontend build or server.
+The original assignment is implemented by the API below. A browser dashboard makes the same behavior easier to demonstrate. Both run in one Python application, with no separate frontend build or server.
 
-![Shortlink v2 dashboard with three Demo-labelled links from isolated local QA](docs/dashboard.jpg)
+## Assignment coverage
 
-Preview uses three Demo-labelled links from an isolated local QA database.
+| Required behavior | Implementation and expected result | Automated evidence |
+| --- | --- | --- |
+| Create a short code from a long URL, with optional alias and expiry | `POST /links` returns `201` with `code` and `short_url`; omitted aliases are generated, omitted expiry means no deadline. | [Link tests](tests/test_links.py), [validation tests](tests/test_validation.py) |
+| Redirect to the original URL | `GET /{code}` returns `302` with the destination in `Location`. | [Link tests](tests/test_links.py) |
+| Clear errors for unknown and expired links | Unknown codes return `404`; expired codes return `410`, each with a readable `detail`. | [Link tests](tests/test_links.py) |
+| Count clicks and expose statistics | `GET /links/{code}/stats` returns `total_clicks` and `last_clicked_at`. Each successful redirect adds one click; reading stats adds none. | [Link tests](tests/test_links.py), [analytics tests](tests/test_analytics.py) |
+| Validate URLs and reject duplicate aliases | Invalid URLs return `422`; an alias already in use returns `409` without replacing the original link. | [Validation tests](tests/test_validation.py), [link tests](tests/test_links.py) |
+| Store data in SQLite or Postgres | SQLite preserves links and click totals across restarts; atomic updates protect concurrent click counts. | [Link tests](tests/test_links.py), [migration tests](tests/test_migrations.py) |
+| At least five pytest tests, setup instructions, endpoints, and curl examples | 251 tests; setup and request examples follow in this README. | [Tests](tests/), [GitHub Actions](https://github.com/paidadharshitha/url-shortener-api/actions/workflows/ci.yml) |
+
+**Authentication in version 2:** private accounts are an added feature. Create an account first and use its bearer token for creation, management, and statistics. The dashboard handles this automatically. Short-link redirects remain public. The added features are described separately under [Enhancements and their purpose](#enhancements-and-their-purpose).
 
 ## Quick start
 
@@ -51,6 +61,25 @@ BASE_URL=http://localhost:8001 uvicorn app.main:app --reload --env-file .env --p
 ```
 
 Open <http://localhost:8001>. The command-level `BASE_URL` overrides the value in `.env` for this run.
+
+## Reviewer walkthrough
+
+After starting the service, demonstrate the required behavior in this order:
+
+1. Create an account in the dashboard. For API review, follow [Create an account and authenticate](#create-an-account-and-authenticate), then paste the returned token into Swagger's **Authorize** control at `/docs`.
+2. Create a link to `https://www.wikipedia.org/` with an unused alias, such as `review-demo`. Expect `201`, the chosen `code`, and a `short_url`. Create another without an alias to check automatic code generation.
+3. Read the new link's stats: expect `total_clicks: 0` and `last_clicked_at: null`. Request its short URL once: expect `302` to the destination. Read stats again: expect `1` and a timestamp. In the dashboard, return and click **Refresh** to see the count.
+4. Try the same alias again: expect `409`. Submit `not-a-url` as the destination: expect `422`. Request a code that was never created: expect `404`.
+5. Create another link with a future expiry. At or after that instant its redirect must return `410`, without adding a click. The automated expiry test uses a controlled clock, so it checks this boundary without waiting.
+6. Restart the server with the same database, sign in, and verify the link and its click total are still present.
+
+Run the tests for the original requirements from the activated virtual environment:
+
+```bash
+pytest tests/test_links.py tests/test_validation.py tests/test_migrations.py
+```
+
+Run `pytest` for all 251 tests, including the added features. QR codes, CSV transfers, and the dashboard are useful demonstrations, but the API behavior and tests above provide the direct evidence for the assignment. A `localhost` short URL works on the machine running the service; sharing across devices requires a reachable deployment and matching `BASE_URL`.
 
 ## Endpoints
 
@@ -411,6 +440,25 @@ docker exec url-shortener python -m app.admin claim-legacy demo-user
 ```
 
 The command leaves links already owned by another account unchanged. It also preserves all link metadata and click history. If upgrading from a version without daily analytics, historical lifetime clicks are not assigned to invented dates; only previously recorded daily activity is available.
+
+## Enhancements and their purpose
+
+These additions support sharing and tracking workflows beyond the original requirements:
+
+| Feature | What it helps the link owner do | Where to find it |
+| --- | --- | --- |
+| Private accounts | Keep link management and statistics separate for each owner. | Create account / Sign in; `/auth/*` |
+| QR download | Put the same short link on printed material or a screen for scanning. | Link details → **Show QR code**; `/links/{code}/qr.svg` |
+| Bulk CSV import | Create many short links without entering each destination separately. | **Import CSV** → choose a file → **Import links**; `/links/bulk` |
+| CSV export | Review or share a spreadsheet report of links, statuses, and click totals. | **Export CSV**; `/links/export.csv` |
+| Date-range analytics | Inspect clicks during a selected period while retaining lifetime totals. | **Click activity** → 7/30/90 days or custom dates |
+| Rate limits | Bound repeated API requests, link creation, and login attempts. | Enforced automatically; `429` responses include `Retry-After` |
+
+For a quick bulk demonstration, upload [examples/import-demo.csv](examples/import-demo.csv). It contains three valid destinations with labels and no fixed aliases; the service generates their codes. Export afterward to inspect the resulting link report. Export files include reporting columns; use the import example's format when preparing a new upload.
+
+![Shortlink v2 dashboard with three Demo-labelled links from isolated local QA](docs/dashboard.jpg)
+
+Preview uses three Demo-labelled links and five actual test clicks from an isolated local QA database; it does not show customer activity.
 
 ## Design and scope
 
