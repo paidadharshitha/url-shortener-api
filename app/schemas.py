@@ -16,12 +16,22 @@ from pydantic import (
 
 from app.domain import LinkStatus
 
-RESERVED_CODES = frozenset({"links", "docs", "redoc", "openapi.json", "assets"})
+RESERVED_CODES = frozenset({"links", "docs", "redoc", "openapi.json", "assets", "auth"})
 Alias = Annotated[str, Field(min_length=3, max_length=64, pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]*$")]
 
 
 class LinkInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+    @field_validator("url", "title", "alias", "expires_at", mode="before", check_fields=False)
+    @classmethod
+    def require_valid_unicode(cls, value: object) -> object:
+        if isinstance(value, str):
+            try:
+                value.encode("utf-8")
+            except UnicodeEncodeError as exc:
+                raise ValueError("Text must contain valid Unicode characters.") from exc
+        return value
 
     @field_validator("url", mode="before", check_fields=False)
     @classmethod
@@ -121,6 +131,9 @@ class DailyClicks(BaseModel):
 
 class LinkStats(LinkResponse):
     daily_clicks: list[DailyClicks]
+    start_date: date
+    end_date: date
+    period_clicks: int
 
 
 class LinkList(BaseModel):
@@ -138,6 +151,9 @@ class LinkOverview(BaseModel):
     total_clicks: int
     clicks_today: int
     daily_clicks: list[DailyClicks]
+    start_date: date
+    end_date: date
+    period_clicks: int
 
 
 class ErrorResponse(BaseModel):

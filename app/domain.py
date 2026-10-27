@@ -17,6 +17,7 @@ class Link:
     last_clicked_at: datetime | None = None
     title: str | None = None
     is_active: bool = True
+    owner_id: int | None = None
 
     def is_expired(self, now: datetime) -> bool:
         return self.expires_at is not None and self.expires_at <= now
@@ -45,6 +46,10 @@ class LinkPaused(Exception):
 
 class InvalidExpiry(Exception):
     """An expiry must be strictly in the future."""
+
+
+class InvalidDateRange(Exception):
+    """An analytics range must describe a bounded, inclusive UTC date window."""
 
 
 class CodeGenerationFailed(Exception):

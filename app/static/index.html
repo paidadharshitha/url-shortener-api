@@ -85,308 +85,508 @@
       </symbol>
     </svg>
 
-    <aside class="sidebar" aria-label="Workspace navigation">
+    <main id="auth-view" class="auth-view">
       <a class="brand" href="/" aria-label="Shortlink home"
         ><span class="brand-mark"
           ><svg class="icon"><use href="#i-link" /></svg></span
         >shortlink<span class="brand-period">.</span></a
       >
-      <div class="workspace-label">
-        <span class="workspace-avatar">S</span>
-        <div>My workspace<span>Link management</span></div>
-      </div>
-      <nav class="navigation">
-        <a class="nav-item current" href="#links"
-          ><svg class="icon"><use href="#i-grid" /></svg>All links</a
-        >
-        <a class="nav-item" href="#activity"
-          ><svg class="icon"><use href="#i-chart" /></svg>Activity</a
-        >
-        <a class="nav-item" href="/docs" target="_blank" rel="noopener"
-          ><svg class="icon"><use href="#i-code" /></svg>API reference<svg
-            class="icon nav-external"
+      <section class="auth-card surface" aria-labelledby="auth-heading">
+        <h1 id="auth-heading">Your links, in one place.</h1>
+        <p id="auth-description">
+          Sign in to your private workspace to create, share, and track your
+          links.
+        </p>
+        <div class="auth-modes" aria-label="Account options">
+          <button
+            class="button button-primary"
+            id="login-mode"
+            type="button"
+            aria-pressed="true"
           >
-            <use href="#i-external" /></svg
-        ></a>
-      </nav>
-      <div class="sidebar-footer">
-        <span class="connection-dot"></span
-        ><span id="connection-state">Connecting…</span
-        ><a
-          href="https://github.com/paidadharshitha/url-shortener-api"
-          target="_blank"
-          rel="noopener"
-          >View project<svg class="icon"><use href="#i-external" /></svg
-        ></a>
-      </div>
-    </aside>
-
-    <main id="main" class="main">
-      <header class="page-header">
-        <div>
-          <h1>Link workspace</h1>
-          <p>A shorter path to everything you share.</p>
+            Sign in
+          </button>
+          <button
+            class="button button-quiet"
+            id="register-mode"
+            type="button"
+            aria-pressed="false"
+          >
+            Create account
+          </button>
         </div>
-        <button
-          id="refresh-button"
-          class="button button-quiet"
-          type="button"
-          aria-label="Refresh workspace"
-        >
-          <svg class="icon"><use href="#i-refresh" /></svg><span>Refresh</span>
-        </button>
-      </header>
-      <div id="page-error" class="alert" role="alert" hidden></div>
-
-      <section class="metrics" aria-label="Workspace overview">
-        <div class="metric">
-          <span>Total links</span><strong id="total-links">—</strong>
-        </div>
-        <div class="metric">
-          <span>Total clicks</span><strong id="total-clicks">—</strong>
-        </div>
-        <div class="metric">
-          <span>Active links</span><strong id="active-links">—</strong>
-        </div>
-        <div class="metric">
-          <span>Clicks today <small>UTC</small></span
-          ><strong id="clicks-today">—</strong>
-        </div>
+        <form id="auth-form">
+          <div class="field">
+            <label for="auth-username">Username</label
+            ><input
+              id="auth-username"
+              autocomplete="username"
+              minlength="3"
+              maxlength="32"
+              pattern="[A-Za-z0-9][A-Za-z0-9_-]*"
+              required
+              autocapitalize="none"
+              spellcheck="false"
+              placeholder="Your username"
+            /><small>3–32 letters, numbers, underscores or hyphens.</small>
+          </div>
+          <div class="field">
+            <label for="auth-password">Password</label
+            ><input
+              id="auth-password"
+              type="password"
+              autocomplete="current-password"
+              minlength="10"
+              maxlength="128"
+              required
+            /><small id="password-hint">At least 10 characters.</small>
+          </div>
+          <div id="auth-error" class="form-error" role="alert" hidden></div>
+          <button
+            class="button button-primary auth-submit"
+            id="auth-submit"
+            type="submit"
+          >
+            Sign in
+          </button>
+        </form>
+        <p class="auth-note">
+          Your links and analytics stay in your account. Anyone with a short
+          link can follow it.
+        </p>
       </section>
-
-      <div class="workspace-top">
-        <section class="composer surface" aria-labelledby="create-heading">
-          <div class="section-heading">
-            <span class="section-icon"
-              ><svg class="icon"><use href="#i-plus" /></svg
-            ></span>
-            <div>
-              <h2 id="create-heading">Make room for a shorter link</h2>
-              <p>Your destination, easier to share.</p>
-            </div>
-          </div>
-          <form id="create-form">
-            <label for="destination">Destination URL</label>
-            <div class="create-row">
-              <input
-                id="destination"
-                name="url"
-                type="url"
-                placeholder="https://example.com/your-long-link"
-                required
-                maxlength="2083"
-                autocomplete="url"
-              /><button
-                id="create-button"
-                class="button button-primary"
-                type="submit"
-              >
-                Shorten link<svg class="icon"><use href="#i-arrow" /></svg>
-              </button>
-            </div>
-            <details class="customize" id="customize">
-              <summary>
-                Customize your link<svg class="icon">
-                  <use href="#i-chevron" />
-                </svg>
-              </summary>
-              <div class="customize-grid">
-                <div class="field">
-                  <label for="link-title">Label <span>optional</span></label
-                  ><input
-                    id="link-title"
-                    name="title"
-                    maxlength="120"
-                    placeholder="e.g. Product launch"
-                  />
-                </div>
-                <div class="field">
-                  <label for="alias">Custom alias <span>optional</span></label
-                  ><input
-                    id="alias"
-                    name="alias"
-                    maxlength="64"
-                    minlength="3"
-                    pattern="[A-Za-z0-9][A-Za-z0-9_-]*"
-                    placeholder="e.g. summer-launch"
-                    aria-describedby="alias-hint"
-                  /><small id="alias-hint">3–64 letters, numbers, _ or -</small>
-                </div>
-                <div class="field">
-                  <label for="expiry">Expires</label
-                  ><select id="expiry" name="expiry">
-                    <option value="never">Never</option>
-                    <option value="1">In 1 hour</option>
-                    <option value="24">In 24 hours</option>
-                    <option value="168">In 7 days</option>
-                    <option value="720">In 30 days</option>
-                    <option value="custom">Choose date &amp; time</option>
-                  </select>
-                </div>
-                <div class="field" id="custom-expiry-field" hidden>
-                  <label for="custom-expiry"
-                    >Expiry <span>your local time</span></label
-                  ><input id="custom-expiry" type="datetime-local" />
-                </div>
-              </div>
-            </details>
-            <div id="create-error" class="form-error" role="alert" hidden></div>
-          </form>
-          <div
-            id="created-result"
-            class="created-result"
-            aria-live="polite"
-            hidden
-          >
-            <div class="created-label">
-              <svg class="icon"><use href="#i-check" /></svg>Ready to share
-            </div>
-            <div class="result-row">
-              <a id="created-url" target="_blank" rel="noopener"></a
-              ><button
-                id="copy-created"
-                class="button button-small"
-                type="button"
-              >
-                <svg class="icon"><use href="#i-copy" /></svg>Copy
-              </button>
-            </div>
-          </div>
-        </section>
-        <section
-          class="activity"
-          id="activity"
-          aria-labelledby="activity-heading"
+      <p class="auth-footer">
+        A shorter path to everything you share.
+        <a href="/docs" target="_blank" rel="noopener">API reference</a>
+      </p>
+    </main>
+    <div id="workspace" hidden>
+      <aside class="sidebar" aria-label="Workspace navigation">
+        <a class="brand" href="/" aria-label="Shortlink home"
+          ><span class="brand-mark"
+            ><svg class="icon"><use href="#i-link" /></svg></span
+          >shortlink<span class="brand-period">.</span></a
         >
-          <div class="activity-heading">
-            <h2 id="activity-heading">Click activity</h2>
-            <span>Last 7 days · UTC</span>
-          </div>
-          <div id="overview-chart" class="chart" aria-live="polite">
-            <p class="chart-loading">Loading activity…</p>
-          </div>
-          <p id="activity-caption" class="chart-caption">
-            Every successful redirect counts as one click.
-          </p>
-        </section>
-      </div>
-
-      <section id="links" class="link-section" aria-labelledby="links-heading">
-        <div class="list-heading">
+        <div class="workspace-label">
+          <span class="workspace-avatar">S</span>
           <div>
-            <h2 id="links-heading">
-              Your links <span id="list-total" class="count-badge">0</span>
-            </h2>
-            <p>Find a link. Follow its story.</p>
-          </div>
-          <div class="list-controls">
-            <div class="search-field">
-              <svg class="icon"><use href="#i-search" /></svg
-              ><label class="sr-only" for="search">Search links</label
-              ><input
-                id="search"
-                type="search"
-                placeholder="Search label, URL, or alias"
-                maxlength="200"
-                autocomplete="off"
-              />
-            </div>
-            <label class="sr-only" for="status-filter">Filter link status</label
-            ><select id="status-filter">
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="expired">Expired</option>
-            </select>
+            <strong id="workspace-name">My workspace</strong
+            ><span>Private workspace</span>
           </div>
         </div>
-        <div class="ledger-layout" id="ledger-layout">
-          <div class="ledger surface">
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Link &amp; destination</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="click-column">Clicks</th>
-                    <th scope="col" class="created-column">Created</th>
-                    <th scope="col"><span class="sr-only">Actions</span></th>
-                  </tr>
-                </thead>
-                <tbody id="link-rows"></tbody>
-              </table>
-            </div>
-            <div id="list-loading" class="list-state" role="status">
-              <span class="spinner"></span>
-              <p>Loading your links…</p>
-            </div>
-            <div id="empty-state" class="list-state" hidden>
-              <svg class="empty-icon icon"><use href="#i-link" /></svg>
-              <h3>Your first short link starts here</h3>
-              <p>
-                Paste a destination above. We’ll take care of the short version.
-              </p>
-              <button
-                id="empty-action"
-                class="button button-quiet"
-                type="button"
-              >
-                Create a link<svg class="icon"><use href="#i-arrow" /></svg>
-              </button>
-            </div>
-            <div class="pagination" id="pagination">
-              <span id="page-range" aria-live="polite">0 links</span>
+        <nav class="navigation">
+          <a class="nav-item current" href="#links"
+            ><svg class="icon"><use href="#i-grid" /></svg>All links</a
+          >
+          <a class="nav-item" href="#activity"
+            ><svg class="icon"><use href="#i-chart" /></svg>Activity</a
+          >
+          <a class="nav-item" href="/docs" target="_blank" rel="noopener"
+            ><svg class="icon"><use href="#i-code" /></svg>API reference<svg
+              class="icon nav-external"
+            >
+              <use href="#i-external" /></svg
+          ></a>
+        </nav>
+        <div class="sidebar-footer">
+          <span class="connection-dot"></span
+          ><span id="connection-state">Connecting…</span
+          ><a
+            href="https://github.com/paidadharshitha/url-shortener-api"
+            target="_blank"
+            rel="noopener"
+            >View project<svg class="icon"><use href="#i-external" /></svg
+          ></a>
+        </div>
+      </aside>
+
+      <main id="main" class="main">
+        <header class="page-header">
+          <div>
+            <h1>Link workspace</h1>
+            <p>A shorter path to everything you share.</p>
+          </div>
+          <div class="header-actions">
+            <span id="account-name" class="account-name"></span
+            ><button
+              id="logout-button"
+              class="button button-quiet"
+              type="button"
+            >
+              Sign out
+            </button>
+            <button
+              id="refresh-button"
+              class="button button-quiet"
+              type="button"
+              aria-label="Refresh workspace"
+            >
+              <svg class="icon"><use href="#i-refresh" /></svg
+              ><span>Refresh</span>
+            </button>
+          </div>
+        </header>
+        <div id="page-error" class="alert" role="alert" hidden></div>
+
+        <section class="metrics" aria-label="Workspace overview">
+          <div class="metric">
+            <span>Total links</span><strong id="total-links">—</strong>
+          </div>
+          <div class="metric">
+            <span>Total clicks</span><strong id="total-clicks">—</strong>
+          </div>
+          <div class="metric">
+            <span>Active links</span><strong id="active-links">—</strong>
+          </div>
+          <div class="metric">
+            <span>Clicks today <small>UTC</small></span
+            ><strong id="clicks-today">—</strong>
+          </div>
+        </section>
+
+        <div class="workspace-top">
+          <section class="composer surface" aria-labelledby="create-heading">
+            <div class="section-heading">
+              <span class="section-icon"
+                ><svg class="icon"><use href="#i-plus" /></svg
+              ></span>
               <div>
-                <button
-                  id="previous-page"
-                  class="button button-small"
-                  type="button"
-                  disabled
+                <h2 id="create-heading">Make room for a shorter link</h2>
+                <p>Your destination, easier to share.</p>
+              </div>
+            </div>
+            <form id="create-form">
+              <label for="destination">Destination URL</label>
+              <div class="create-row">
+                <input
+                  id="destination"
+                  name="url"
+                  type="url"
+                  placeholder="https://example.com/your-long-link"
+                  required
+                  maxlength="2083"
+                  autocomplete="url"
+                /><button
+                  id="create-button"
+                  class="button button-primary"
+                  type="submit"
                 >
-                  Previous</button
+                  Shorten link<svg class="icon"><use href="#i-arrow" /></svg>
+                </button>
+              </div>
+              <details class="customize" id="customize">
+                <summary>
+                  Customize your link<svg class="icon">
+                    <use href="#i-chevron" />
+                  </svg>
+                </summary>
+                <div class="customize-grid">
+                  <div class="field">
+                    <label for="link-title">Label <span>optional</span></label
+                    ><input
+                      id="link-title"
+                      name="title"
+                      maxlength="120"
+                      placeholder="e.g. Product launch"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="alias">Custom alias <span>optional</span></label
+                    ><input
+                      id="alias"
+                      name="alias"
+                      maxlength="64"
+                      minlength="3"
+                      pattern="[A-Za-z0-9][A-Za-z0-9_-]*"
+                      placeholder="e.g. summer-launch"
+                      aria-describedby="alias-hint"
+                    /><small id="alias-hint"
+                      >3–64 letters, numbers, _ or -</small
+                    >
+                  </div>
+                  <div class="field">
+                    <label for="expiry">Expires</label
+                    ><select id="expiry" name="expiry">
+                      <option value="never">Never</option>
+                      <option value="1">In 1 hour</option>
+                      <option value="24">In 24 hours</option>
+                      <option value="168">In 7 days</option>
+                      <option value="720">In 30 days</option>
+                      <option value="custom">Choose date &amp; time</option>
+                    </select>
+                  </div>
+                  <div class="field" id="custom-expiry-field" hidden>
+                    <label for="custom-expiry"
+                      >Expiry <span>your local time</span></label
+                    ><input id="custom-expiry" type="datetime-local" />
+                  </div>
+                </div>
+              </details>
+              <div
+                id="create-error"
+                class="form-error"
+                role="alert"
+                hidden
+              ></div>
+            </form>
+            <div
+              id="created-result"
+              class="created-result"
+              aria-live="polite"
+              hidden
+            >
+              <div class="created-label">
+                <svg class="icon"><use href="#i-check" /></svg>Ready to share
+              </div>
+              <div class="result-row">
+                <a id="created-url" target="_blank" rel="noopener"></a
                 ><button
-                  id="next-page"
+                  id="copy-created"
                   class="button button-small"
                   type="button"
-                  disabled
                 >
-                  Next
+                  <svg class="icon"><use href="#i-copy" /></svg>Copy
                 </button>
               </div>
             </div>
-          </div>
-          <aside
-            id="detail-panel"
-            class="detail-panel surface"
-            aria-labelledby="detail-heading"
-            hidden
-            tabindex="-1"
+          </section>
+          <section
+            class="activity"
+            id="activity"
+            aria-labelledby="activity-heading"
           >
-            <div class="detail-header">
-              <h2 id="detail-heading">Link details</h2>
-              <button
-                id="close-detail"
-                class="icon-button"
-                type="button"
-                aria-label="Close link details"
+            <div class="activity-heading">
+              <h2 id="activity-heading">Click activity</h2>
+              <label class="sr-only" for="analytics-range"
+                >Analytics date range</label
               >
-                <svg class="icon"><use href="#i-close" /></svg>
+              <select id="analytics-range">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="custom">Custom dates</option>
+              </select>
+            </div>
+            <form id="custom-range-form" class="custom-range" hidden>
+              <div>
+                <label for="range-start">From · UTC</label
+                ><input id="range-start" type="date" required />
+              </div>
+              <div>
+                <label for="range-end">To · UTC</label
+                ><input id="range-end" type="date" required />
+              </div>
+              <button class="button button-small" type="submit">
+                Apply dates
+              </button>
+            </form>
+            <div id="range-error" class="form-error" role="alert" hidden></div>
+            <p id="range-caption" class="range-caption">Last 7 days · UTC</p>
+            <div id="overview-chart" class="chart" aria-live="polite">
+              <p class="chart-loading">Loading activity…</p>
+            </div>
+            <p id="activity-caption" class="chart-caption">
+              Every successful redirect counts as one click.
+            </p>
+          </section>
+        </div>
+
+        <section class="workspace-tools" aria-label="Import and export links">
+          <div>
+            <h2>Bring your links along.</h2>
+            <p>Import a list, or take your links and click totals with you.</p>
+          </div>
+          <div class="tool-actions">
+            <button
+              id="import-toggle"
+              class="button"
+              type="button"
+              aria-expanded="false"
+              aria-controls="import-panel"
+            >
+              Import CSV</button
+            ><button id="export-button" class="button" type="button">
+              Export CSV
+            </button>
+          </div>
+        </section>
+        <section
+          id="import-panel"
+          class="import-panel surface"
+          aria-labelledby="import-heading"
+          hidden
+        >
+          <div class="detail-header">
+            <h2 id="import-heading">Shorten a list of links</h2>
+            <button
+              id="close-import"
+              class="icon-button"
+              type="button"
+              aria-label="Close CSV import"
+            >
+              <svg class="icon"><use href="#i-close" /></svg>
+            </button>
+          </div>
+          <p>
+            Upload a UTF-8 CSV with a <code>url</code> column. Add
+            <code>title</code>, <code>alias</code>, or
+            <code>expires_at</code> if you need them. Up to 100 rows, 512 KB.
+          </p>
+          <button id="download-template" class="text-button" type="button">
+            Download example CSV
+          </button>
+          <form id="import-form">
+            <label for="csv-file">CSV file</label>
+            <div class="import-inputs">
+              <input
+                id="csv-file"
+                type="file"
+                accept=".csv,text/csv"
+                required
+              /><button
+                id="import-button"
+                class="button button-primary"
+                type="submit"
+              >
+                Import links
               </button>
             </div>
-            <div id="detail-content"></div>
-          </aside>
-        </div>
-      </section>
-      <footer class="page-footer">
-        <span>Small links. A little less friction.</span
-        ><span
-          >Shortlink <span class="footer-dot">·</span>
-          <a href="/docs" target="_blank" rel="noopener"
-            >Built for sharing</a
-          ></span
+          </form>
+          <div id="import-error" class="form-error" role="alert" hidden></div>
+          <div
+            id="import-results"
+            class="import-results"
+            aria-live="polite"
+            hidden
+          ></div>
+          <p class="import-note">
+            Valid rows are saved. Rows with errors are listed separately so you
+            can fix and retry only those rows.
+          </p>
+        </section>
+        <section
+          id="links"
+          class="link-section"
+          aria-labelledby="links-heading"
         >
-      </footer>
-    </main>
+          <div class="list-heading">
+            <div>
+              <h2 id="links-heading">
+                Your links <span id="list-total" class="count-badge">0</span>
+              </h2>
+              <p>Find a link. Follow its story.</p>
+            </div>
+            <div class="list-controls">
+              <div class="search-field">
+                <svg class="icon"><use href="#i-search" /></svg
+                ><label class="sr-only" for="search">Search links</label
+                ><input
+                  id="search"
+                  type="search"
+                  placeholder="Search label, URL, or alias"
+                  maxlength="200"
+                  autocomplete="off"
+                />
+              </div>
+              <label class="sr-only" for="status-filter"
+                >Filter link status</label
+              ><select id="status-filter">
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+          </div>
+          <div class="ledger-layout" id="ledger-layout">
+            <div class="ledger surface">
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Link &amp; destination</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" class="click-column">Clicks</th>
+                      <th scope="col" class="created-column">Created</th>
+                      <th scope="col"><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="link-rows"></tbody>
+                </table>
+              </div>
+              <div id="list-loading" class="list-state" role="status">
+                <span class="spinner"></span>
+                <p>Loading your links…</p>
+              </div>
+              <div id="empty-state" class="list-state" hidden>
+                <svg class="empty-icon icon"><use href="#i-link" /></svg>
+                <h3>Your first short link starts here</h3>
+                <p>
+                  Paste a destination above. We’ll take care of the short
+                  version.
+                </p>
+                <button
+                  id="empty-action"
+                  class="button button-quiet"
+                  type="button"
+                >
+                  Create a link<svg class="icon"><use href="#i-arrow" /></svg>
+                </button>
+              </div>
+              <div class="pagination" id="pagination">
+                <span id="page-range" aria-live="polite">0 links</span>
+                <div>
+                  <button
+                    id="previous-page"
+                    class="button button-small"
+                    type="button"
+                    disabled
+                  >
+                    Previous</button
+                  ><button
+                    id="next-page"
+                    class="button button-small"
+                    type="button"
+                    disabled
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+            <aside
+              id="detail-panel"
+              class="detail-panel surface"
+              aria-labelledby="detail-heading"
+              hidden
+              tabindex="-1"
+            >
+              <div class="detail-header">
+                <h2 id="detail-heading">Link details</h2>
+                <button
+                  id="close-detail"
+                  class="icon-button"
+                  type="button"
+                  aria-label="Close link details"
+                >
+                  <svg class="icon"><use href="#i-close" /></svg>
+                </button>
+              </div>
+              <div id="detail-content"></div>
+            </aside>
+          </div>
+        </section>
+        <footer class="page-footer">
+          <span>Small links. A little less friction.</span
+          ><span
+            >Shortlink <span class="footer-dot">·</span>
+            <a href="/docs" target="_blank" rel="noopener"
+              >Built for sharing</a
+            ></span
+          >
+        </footer>
+      </main>
+    </div>
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     <noscript
       ><p class="noscript">

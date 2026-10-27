@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
-from tests.conftest import MutableClock
+from tests.conftest import MutableClock, authenticate
 from tests.test_links import create_link
 
 
@@ -172,6 +172,7 @@ def test_failed_daily_counter_write_rolls_back_the_entire_click(
         follow_redirects=False,
         raise_server_exceptions=False,
     ) as client:
+        authenticate(client, register=True)
         create_link(client, alias="atomic-click")
         with closing(sqlite3.connect(settings.database_path)) as connection, connection:
             connection.execute(

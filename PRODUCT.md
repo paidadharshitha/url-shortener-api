@@ -16,7 +16,7 @@ The user evaluates and uses this project locally. The existing FastAPI service r
 
 ## Capabilities and Constraints
 
-Preserve original creation, alias uniqueness, expiry, redirect, statistics, and persistence behavior. Add link management, searching, pagination, pause/resume, and daily analytics. Use the existing Python/FastAPI/SQLite codebase. Preserve existing stored records through migration. The interface is a trusted workspace without accounts; do not imply private multi-user authorization or public hosted deployment.
+Preserve original creation, alias uniqueness, expiry, redirect, statistics, and persistence behavior. Support link management, searching, pagination, pause/resume, and daily analytics. The user approved six additional capabilities: downloadable QR codes, CSV export, 7/30/90-day and custom-date analytics, login with private workspaces, bulk CSV creation, and rate limits. Use the existing Python/FastAPI/SQLite codebase. Preserve existing stored records through migration; legacy links keep working publicly and require explicit operator assignment to an account. Management is private to the signed-in owner while short-link redirects remain public. The service runs locally; do not imply a public hosted deployment.
 
 ## Evidence on Hand
 

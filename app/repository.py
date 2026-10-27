@@ -41,19 +41,29 @@ def link_from_row(row: sqlite3.Row) -> Link:
         ),
         title=row["title"],
         is_active=bool(row["is_active"]),
+        owner_id=row["owner_id"],
     )
 
 
 def daily_counts(
-    connection: sqlite3.Connection, first_day: date, last_day: date, code: str | None = None
+    connection: sqlite3.Connection,
+    first_day: date,
+    last_day: date,
+    code: str | None = None,
+    *,
+    owner_id: int | None = None,
 ) -> dict[str, int]:
-    conditions = "day >= ? AND day <= ?"
-    parameters = [first_day.isoformat(), last_day.isoformat()]
+    conditions = "daily.day >= ? AND daily.day <= ?"
+    parameters: list[object] = [first_day.isoformat(), last_day.isoformat()]
     if code is not None:
-        conditions += " AND code = ?"
+        conditions += " AND daily.code = ?"
         parameters.append(code)
+    if owner_id is not None:
+        conditions += " AND links.owner_id = ?"
+        parameters.append(owner_id)
     rows = connection.execute(
-        f"SELECT day, SUM(clicks) AS clicks FROM daily_clicks WHERE {conditions} GROUP BY day",
+        "SELECT daily.day, SUM(daily.clicks) AS clicks FROM daily_clicks AS daily "
+        f"JOIN links ON links.code = daily.code WHERE {conditions} GROUP BY daily.day",
         parameters,
     ).fetchall()
     return {row["day"]: row["clicks"] for row in rows}
@@ -92,7 +102,8 @@ class LinkRepository:
                     total_clicks INTEGER NOT NULL DEFAULT 0 CHECK (total_clicks >= 0),
                     last_clicked_at TEXT,
                     title TEXT,
-                    is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1))
+                    is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+                    owner_id INTEGER
                 )
                 """
             )
@@ -104,6 +115,8 @@ class LinkRepository:
                     "ALTER TABLE links ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1 "
                     "CHECK (is_active IN (0, 1))"
                 )
+            if "owner_id" not in columns:
+                connection.execute("ALTER TABLE links ADD COLUMN owner_id INTEGER")
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS daily_clicks (
@@ -120,14 +133,19 @@ class LinkRepository:
             connection.execute(
                 "CREATE INDEX IF NOT EXISTS daily_clicks_day_idx ON daily_clicks(day)"
             )
+            connection.execute(
+                "CREATE INDEX IF NOT EXISTS links_owner_created_idx "
+                "ON links(owner_id, created_at DESC, code)"
+            )
 
     def create(self, link: Link) -> Link:
         try:
             with self.connection() as connection:
                 connection.execute(
                     """
-                    INSERT INTO links (code, url, created_at, expires_at, title, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO links
+                        (code, url, created_at, expires_at, title, is_active, owner_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         link.code,
@@ -136,6 +154,7 @@ class LinkRepository:
                         timestamp(link.expires_at) if link.expires_at else None,
                         link.title,
                         int(link.is_active),
+                        link.owner_id,
                     ),
                 )
         except sqlite3.IntegrityError as exc:
@@ -144,12 +163,21 @@ class LinkRepository:
             raise
         return link
 
-    def get(self, code: str) -> Link | None:
+    def get(self, code: str, *, owner_id: int | None = None) -> Link | None:
+        conditions = "code = ?"
+        parameters: list[object] = [code]
+        if owner_id is not None:
+            conditions += " AND owner_id = ?"
+            parameters.append(owner_id)
         with self.connection() as connection:
-            row = connection.execute("SELECT * FROM links WHERE code = ?", (code,)).fetchone()
+            row = connection.execute(
+                f"SELECT * FROM links WHERE {conditions}", parameters
+            ).fetchone()
         return link_from_row(row) if row else None
 
-    def update(self, code: str, changes: Mapping[str, object]) -> Link | None:
+    def update(
+        self, code: str, changes: Mapping[str, object], *, owner_id: int | None = None
+    ) -> Link | None:
         # Only fixed column names enter SQL; request values remain bound parameters.
         allowed = {"url", "title", "expires_at", "is_active"}
         if not changes or not changes.keys() <= allowed:
@@ -158,17 +186,32 @@ class LinkRepository:
         values = [
             timestamp(value) if isinstance(value, datetime) else value for value in changes.values()
         ]
+        conditions = "code = ?"
+        parameters: list[object] = [*values, code]
+        if owner_id is not None:
+            conditions += " AND owner_id = ?"
+            parameters.append(owner_id)
         with self.connection() as connection:
             row = connection.execute(
-                f"UPDATE links SET {assignments} WHERE code = ? RETURNING *", [*values, code]
+                f"UPDATE links SET {assignments} WHERE {conditions} RETURNING *", parameters
             ).fetchone()
         return link_from_row(row) if row else None
 
     def list_links(
-        self, query: str, status: str, limit: int, offset: int, now: datetime
+        self,
+        query: str,
+        status: str,
+        limit: int,
+        offset: int,
+        now: datetime,
+        *,
+        owner_id: int | None = None,
     ) -> tuple[list[Link], int]:
         conditions = []
         parameters: list[object] = []
+        if owner_id is not None:
+            conditions.append("owner_id = ?")
+            parameters.append(owner_id)
         if query:
             escaped = query.casefold().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             pattern = f"%{escaped}%"
@@ -199,18 +242,29 @@ class LinkRepository:
         return [link_from_row(row) for row in rows], total
 
     def get_stats(
-        self, code: str, first_day: date, last_day: date
+        self, code: str, first_day: date, last_day: date, *, owner_id: int | None = None
     ) -> tuple[Link | None, dict[str, int]]:
+        conditions = "code = ?"
+        parameters: list[object] = [code]
+        if owner_id is not None:
+            conditions += " AND owner_id = ?"
+            parameters.append(owner_id)
         with self.connection() as connection:
             connection.execute("BEGIN")
-            row = connection.execute("SELECT * FROM links WHERE code = ?", (code,)).fetchone()
+            row = connection.execute(
+                f"SELECT * FROM links WHERE {conditions}", parameters
+            ).fetchone()
             counts = daily_counts(connection, first_day, last_day, code) if row else {}
         return (link_from_row(row) if row else None), counts
 
     def overview(
-        self, now: datetime, first_day: date, last_day: date
+        self, now: datetime, first_day: date, last_day: date, *, owner_id: int | None = None
     ) -> tuple[dict[str, int], dict[str, int]]:
         instant = timestamp(now)
+        where = " WHERE owner_id = ?" if owner_id is not None else ""
+        parameters: list[object] = [instant, instant]
+        if owner_id is not None:
+            parameters.append(owner_id)
         with self.connection() as connection:
             connection.execute("BEGIN")
             row = connection.execute(
@@ -224,11 +278,18 @@ class LinkRepository:
                         THEN 1 ELSE 0 END), 0) AS expired_links,
                     COALESCE(SUM(total_clicks), 0) AS total_clicks
                 FROM links
-                """,
-                (instant, instant),
+                """
+                + where,
+                parameters,
             ).fetchone()
-            counts = daily_counts(connection, first_day, last_day)
-        return dict(row), counts
+            counts = daily_counts(connection, first_day, last_day, owner_id=owner_id)
+            today = now.astimezone(UTC).date()
+            today_counts = (
+                counts
+                if first_day <= today <= last_day
+                else daily_counts(connection, today, today, owner_id=owner_id)
+            )
+        return {**dict(row), "clicks_today": today_counts.get(today.isoformat(), 0)}, counts
 
     def record_click(self, code: str, now: datetime) -> Link | None:
         """Return the link and count a successful redirect in one transaction."""

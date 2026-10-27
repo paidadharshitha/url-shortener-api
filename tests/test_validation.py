@@ -44,7 +44,19 @@ def test_invalid_alias_is_rejected(client: TestClient, alias: str) -> None:
 
 @pytest.mark.parametrize(
     "alias",
-    ["links", "LINKS", "docs", "Docs", "redoc", "ReDoc", "openapi.json", "assets", "ASSETS"],
+    [
+        "links",
+        "LINKS",
+        "docs",
+        "Docs",
+        "redoc",
+        "ReDoc",
+        "openapi.json",
+        "assets",
+        "ASSETS",
+        "auth",
+        "AUTH",
+    ],
 )
 def test_reserved_route_alias_is_rejected_case_insensitively(
     client: TestClient, alias: str

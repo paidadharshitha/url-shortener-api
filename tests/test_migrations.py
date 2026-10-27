@@ -6,10 +6,11 @@ from threading import Barrier
 
 from fastapi.testclient import TestClient
 
+from app.admin import claim_legacy
 from app.config import Settings
 from app.main import create_app
 from app.repository import LinkRepository
-from tests.conftest import MutableClock
+from tests.conftest import MutableClock, authenticate
 from tests.test_links import TARGET_URL, create_link, parse_timestamp
 
 
@@ -60,6 +61,12 @@ def test_legacy_database_migrates_without_losing_links_or_inventing_daily_histor
     created_at, last_clicked_at = seed_legacy_database(settings, clock)
 
     with TestClient(create_app(settings, clock=clock), follow_redirects=False) as client:
+        user = authenticate(client, register=True)
+        # Registration never claims an earlier deployment's links. The local
+        # operator explicitly assigns them before testing authenticated management.
+        assert client.get("/links/legacy-link/stats").status_code == 404
+        assert client.get("/links").json()["total"] == 0
+        assert claim_legacy(client.app.state.link_service.repository, user["username"]) == 2
         migrated = client.get("/links/legacy-link/stats")
         assert migrated.status_code == 200
         stats = migrated.json()
@@ -88,6 +95,7 @@ def test_legacy_database_migrates_without_losing_links_or_inventing_daily_histor
     # Repeated initialization is safe and preserves both migration and new data.
     for _ in range(2):
         with TestClient(create_app(settings, clock=clock), follow_redirects=False) as client:
+            authenticate(client)
             stats = client.get("/links/legacy-link/stats").json()
             assert stats["title"] == "Migrated campaign"
             assert stats["total_clicks"] == 13
@@ -127,6 +135,7 @@ def test_patch_state_and_daily_clicks_persist_after_restart(
     settings: Settings, clock: MutableClock
 ) -> None:
     with TestClient(create_app(settings, clock=clock), follow_redirects=False) as client:
+        authenticate(client, register=True)
         create_link(client, alias="persistent-dashboard", title="Initial")
         client.get("/persistent-dashboard")
         client.patch(
@@ -135,6 +144,7 @@ def test_patch_state_and_daily_clicks_persist_after_restart(
         )
 
     with TestClient(create_app(settings, clock=clock), follow_redirects=False) as client:
+        authenticate(client)
         stats = client.get("/links/persistent-dashboard/stats").json()
         assert stats["title"] == "Updated"
         assert stats["url"] == "https://example.org/updated"

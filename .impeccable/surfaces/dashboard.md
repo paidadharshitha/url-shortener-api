@@ -17,3 +17,7 @@ FORM: Navigation notebook, candidate 5, seed 54fb9236. Other grounded candidates
 INTERACTION: A created link appears as a selectable address with one-click copy. Selecting a ledger entry opens its details in an inline side panel with real click bars and editable metadata; no chart data is simulated. One short surface reveal and strong focus treatment connect the transition. Reduced-motion users get immediate updates.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Version 2 extension
+
+Preserve the established notebook identity. Introduce a compact sign-in/create-account entry, an account control with sign-out, explicit UTC analytics ranges, inline CSV import with row-by-row outcomes, filtered CSV export, and QR preview/download in link details. Every management view is scoped to the authenticated owner. QR codes encode the public short URL. Screenshots use a separate QA database with visibly named Demo links and actual clicks; no illustrative analytics are presented as user activity.

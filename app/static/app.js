@@ -10,6 +10,9 @@ const state = {
   items: [],
   selected: null,
   retryList: false,
+  user: null,
+  csrf: null,
+  range: { days: 7 },
 };
 const number = new Intl.NumberFormat();
 const dayFormat = new Intl.DateTimeFormat(undefined, {
@@ -28,9 +31,13 @@ const chartDayFormat = new Intl.DateTimeFormat("en", {
 });
 let listRequest = 0;
 let detailRequest = 0;
+let overviewRequest = 0;
 let searchTimer;
 let toastTimer;
 let lastDetailTrigger;
+let authMode = "login";
+let sessionEpoch = 0;
+let qrObjectUrl;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -103,20 +110,30 @@ function toast(message) {
   }, 3500);
 }
 
-async function api(path, options = {}) {
+async function api(path, options = {}, binary = false) {
+  const epoch = sessionEpoch;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     const response = await fetch(path, {
       ...options,
+      credentials: "same-origin",
       signal: controller.signal,
       headers: {
-        Accept: "application/json",
+        Accept: binary ? "*/*" : "application/json",
+        ...(state.csrf ? { "X-CSRF-Token": state.csrf } : {}),
         ...(options.body ? { "Content-Type": "application/json" } : {}),
         ...options.headers,
       },
       cache: "no-store",
     });
+    if (epoch !== sessionEpoch) throw staleRequest();
+    if (response.status === 204 && response.ok) return null;
+    if (binary && response.ok) {
+      const blob = await response.blob();
+      if (epoch !== sessionEpoch) throw staleRequest();
+      return blob;
+    }
     let data;
     try {
       data = await response.json();
@@ -127,7 +144,11 @@ async function api(path, options = {}) {
           : "The server couldn’t complete this request. Please try again shortly.",
       );
     }
+    if (epoch !== sessionEpoch) throw staleRequest();
     if (!response.ok) {
+      if (response.status === 401 && state.user) {
+        showSignIn("Your session has expired. Sign in again to continue.");
+      }
       const messages = Array.isArray(data.detail)
         ? data.detail
             .map(
@@ -136,9 +157,11 @@ async function api(path, options = {}) {
             )
             .join(" ")
         : data.detail;
-      throw new Error(
+      const error = new Error(
         messages || `Request failed (${response.status}). Please try again.`,
       );
+      error.status = response.status;
+      throw error;
     }
     $("#connection-state").textContent = "Connected to your API";
     $(".sidebar-footer").classList.add("connected");
@@ -205,7 +228,7 @@ function renderChart(container, days) {
   totalLabel.append(
     element("strong", "", number.format(total)),
     document.createTextNode(
-      total === 1 ? "click this week" : "clicks this week",
+      total === 1 ? "click in selected period" : "clicks in selected period",
     ),
   );
   container.append(totalLabel);
@@ -269,7 +292,9 @@ function renderChart(container, days) {
       ),
     );
     svg.append(bar);
-    const today = index === days.length - 1;
+    const today = day.date === new Date().toISOString().slice(0, 10);
+    if (index % Math.ceil(days.length / 7) !== 0 && index !== days.length - 1)
+      return;
     svg.append(
       svgElement(
         "text",
@@ -284,7 +309,9 @@ function renderChart(container, days) {
         },
         today
           ? "Today"
-          : chartDayFormat.format(new Date(`${day.date}T00:00:00Z`)),
+          : days.length <= 7
+            ? chartDayFormat.format(new Date(`${day.date}T00:00:00Z`))
+            : day.date.slice(5),
       ),
     );
   });
@@ -296,8 +323,12 @@ function renderChart(container, days) {
 }
 
 async function loadOverview() {
+  const request = ++overviewRequest;
   try {
-    const overview = await api("/links/overview");
+    const overview = await api(`/links/overview?${rangeQuery()}`);
+    if (request !== overviewRequest) return;
+    $("#range-caption").textContent =
+      `${overview.start_date} – ${overview.end_date} · UTC`;
     for (const [selector, key] of [
       ["#total-links", "total_links"],
       ["#total-clicks", "total_clicks"],
@@ -308,6 +339,8 @@ async function loadOverview() {
     }
     renderChart($("#overview-chart"), overview.daily_clicks);
   } catch (error) {
+    if (request !== overviewRequest) return;
+    if (error.name === "StaleRequest") throw error;
     $("#overview-chart").replaceChildren(
       element(
         "p",
@@ -452,7 +485,8 @@ async function refresh({ details = false } = {}) {
     await Promise.all([loadOverview(), loadLinks()]);
     if (details && state.selected) await openDetails(state.selected);
   } catch (error) {
-    showError($("#page-error"), error.message);
+    if (error.name !== "StaleRequest")
+      showError($("#page-error"), error.message);
   } finally {
     button.disabled = false;
   }
@@ -491,6 +525,64 @@ function renderDetails(link) {
   copy.addEventListener("click", () => copyLink(link.short_url, copy));
   address.append(safeLink(link.short_url, displayUrl(link.short_url)), copy);
   container.append(address);
+  const qrSection = element("div", "qr-section");
+  const qrButton = element("button", "button button-small", "Show QR code");
+  qrButton.type = "button";
+  qrButton.setAttribute("aria-expanded", "false");
+  const qrPreview = element("div", "qr-preview");
+  qrPreview.hidden = true;
+  qrButton.addEventListener("click", async () => {
+    if (!qrPreview.hidden) {
+      qrPreview.hidden = true;
+      qrButton.textContent = "Show QR code";
+      qrButton.setAttribute("aria-expanded", "false");
+      return;
+    }
+    qrButton.disabled = true;
+    const epoch = sessionEpoch;
+    try {
+      const blob = await api(
+        `/links/${encodeURIComponent(link.code)}/qr.svg`,
+        {},
+        true,
+      );
+      if (epoch !== sessionEpoch || !qrSection.isConnected) return;
+      if (qrObjectUrl) URL.revokeObjectURL(qrObjectUrl);
+      qrObjectUrl = URL.createObjectURL(blob);
+      const picture = element("img");
+      picture.src = qrObjectUrl;
+      picture.alt = `QR code for ${linkName(link)}`;
+      picture.width = 192;
+      picture.height = 192;
+      const download = element(
+        "button",
+        "button button-small",
+        "Download QR (SVG)",
+      );
+      download.type = "button";
+      download.addEventListener("click", () =>
+        downloadBlob(blob, `${link.code}.svg`),
+      );
+      qrPreview.replaceChildren(
+        picture,
+        download,
+        element(
+          "small",
+          "",
+          "Scanning opens the short link and counts a click.",
+        ),
+      );
+      qrPreview.hidden = false;
+      qrButton.textContent = "Hide QR code";
+      qrButton.setAttribute("aria-expanded", "true");
+    } catch (error) {
+      if (error.name !== "StaleRequest") toast(error.message);
+    } finally {
+      qrButton.disabled = false;
+    }
+  });
+  qrSection.append(qrButton, qrPreview);
+  container.append(qrSection);
   const stats = element("dl", "detail-stats");
   [
     ["Total clicks", number.format(link.total_clicks)],
@@ -507,7 +599,11 @@ function renderDetails(link) {
   });
   container.append(
     stats,
-    element("p", "detail-chart-heading", "Click history · last 7 days, UTC"),
+    element(
+      "p",
+      "detail-chart-heading",
+      `Click history · ${link.start_date} – ${link.end_date}, UTC`,
+    ),
   );
   const chart = element("div", "detail-chart");
   renderChart(chart, link.daily_clicks);
@@ -617,6 +713,10 @@ function renderDetails(link) {
 
 async function openDetails(code, trigger) {
   const request = ++detailRequest;
+  if (qrObjectUrl) {
+    URL.revokeObjectURL(qrObjectUrl);
+    qrObjectUrl = null;
+  }
   state.selected = code;
   if (trigger) lastDetailTrigger = { code, action: trigger.dataset.linkAction };
   $("#detail-panel").hidden = false;
@@ -626,7 +726,9 @@ async function openDetails(code, trigger) {
   );
   renderRows();
   try {
-    const link = await api(`/links/${encodeURIComponent(code)}/stats`);
+    const link = await api(
+      `/links/${encodeURIComponent(code)}/stats?${rangeQuery()}`,
+    );
     if (request !== detailRequest) return;
     renderDetails(link);
     if (trigger) {
@@ -649,6 +751,10 @@ async function openDetails(code, trigger) {
 }
 
 function closeDetails() {
+  if (qrObjectUrl) {
+    URL.revokeObjectURL(qrObjectUrl);
+    qrObjectUrl = null;
+  }
   detailRequest++;
   state.selected = null;
   $("#detail-panel").hidden = true;
@@ -769,4 +875,301 @@ document.querySelectorAll('.nav-item[href^="#"]').forEach((link) =>
       .forEach((item) => item.classList.toggle("current", item === link));
   }),
 );
-refresh();
+
+function staleRequest() {
+  const error = new Error("This request belongs to an earlier session.");
+  error.name = "StaleRequest";
+  return error;
+}
+
+function rangeQuery() {
+  return new URLSearchParams(state.range).toString();
+}
+
+function showSignIn(message = "") {
+  sessionEpoch++;
+  listRequest++;
+  detailRequest++;
+  overviewRequest++;
+  clearTimeout(searchTimer);
+  state.user = null;
+  state.csrf = null;
+  state.items = [];
+  state.total = 0;
+  state.selected = null;
+  state.q = "";
+  state.offset = 0;
+  state.status = "all";
+  state.range = { days: 7 };
+  if (qrObjectUrl) {
+    URL.revokeObjectURL(qrObjectUrl);
+    qrObjectUrl = null;
+  }
+  $("#workspace").hidden = true;
+  $("#auth-view").hidden = false;
+  $("#link-rows").replaceChildren();
+  $("#detail-content").replaceChildren();
+  $("#detail-panel").hidden = true;
+  $("#ledger-layout").classList.remove("has-detail");
+  $("#import-results").replaceChildren();
+  $("#import-results").hidden = true;
+  $("#import-panel").hidden = true;
+  $("#import-toggle").setAttribute("aria-expanded", "false");
+  $("#import-form").reset();
+  $("#created-result").hidden = true;
+  $("#created-url").removeAttribute("href");
+  $("#created-url").textContent = "";
+  $("#create-form").reset();
+  $("#custom-expiry-field").hidden = true;
+  $("#custom-expiry").required = false;
+  $("#search").value = "";
+  $("#status-filter").value = "all";
+  $("#analytics-range").value = "7";
+  $("#custom-range-form").hidden = true;
+  $("#auth-password").value = "";
+  $("#toast").hidden = true;
+  $(".skip-link").href = "#auth-view";
+  showError($("#auth-error"), message);
+}
+
+async function enterWorkspace(session) {
+  sessionEpoch++;
+  state.user = session.user;
+  state.csrf = session.csrf_token;
+  $("#auth-form").reset();
+  $("#auth-view").hidden = true;
+  $("#workspace").hidden = false;
+  $("#workspace-name").textContent = session.user.username;
+  $("#account-name").textContent = session.user.username;
+  $(".skip-link").href = "#main";
+  await refresh();
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const register = mode === "register";
+  $("#auth-heading").textContent = register
+    ? "Make space for your links."
+    : "Your links, in one place.";
+  $("#auth-description").textContent = register
+    ? "Create a private workspace. Start with one link, or bring a whole list."
+    : "Sign in to your private workspace to create, share, and track your links.";
+  $("#auth-submit").textContent = register ? "Create account" : "Sign in";
+  $("#auth-password").autocomplete = register
+    ? "new-password"
+    : "current-password";
+  for (const id of ["login", "register"]) {
+    const selected = id === mode;
+    $(`#${id}-mode`).setAttribute("aria-pressed", String(selected));
+    $(`#${id}-mode`).classList.toggle("button-primary", selected);
+    $(`#${id}-mode`).classList.toggle("button-quiet", !selected);
+  }
+  showError($("#auth-error"), "");
+}
+
+$("#login-mode").addEventListener("click", () => setAuthMode("login"));
+$("#register-mode").addEventListener("click", () => setAuthMode("register"));
+$("#auth-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = $("#auth-submit");
+  button.disabled = true;
+  $("#login-mode").disabled = true;
+  $("#register-mode").disabled = true;
+  showError($("#auth-error"), "");
+  try {
+    const session = await api(`/auth/${authMode}`, {
+      method: "POST",
+      body: JSON.stringify({
+        username: $("#auth-username").value.trim(),
+        password: $("#auth-password").value,
+      }),
+    });
+    await enterWorkspace(session);
+  } catch (error) {
+    if (error.name !== "StaleRequest")
+      showError($("#auth-error"), error.message);
+  } finally {
+    button.disabled = false;
+    $("#login-mode").disabled = false;
+    $("#register-mode").disabled = false;
+  }
+});
+$("#logout-button").addEventListener("click", async () => {
+  const button = $("#logout-button");
+  button.disabled = true;
+  try {
+    await api("/auth/logout", { method: "POST" });
+    showSignIn();
+    setAuthMode("login");
+    $("#auth-username").focus();
+  } catch (error) {
+    if (error.status === 401) showSignIn();
+    else toast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("#analytics-range").addEventListener("change", async () => {
+  const value = $("#analytics-range").value;
+  $("#custom-range-form").hidden = value !== "custom";
+  showError($("#range-error"), "");
+  if (value === "custom") {
+    $("#range-start").focus();
+    return;
+  }
+  state.range = { days: Number(value) };
+  await refresh({ details: true });
+});
+$("#custom-range-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const start = $("#range-start").value,
+    end = $("#range-end").value;
+  const span = (new Date(end) - new Date(start)) / 86400000;
+  if (
+    !start ||
+    !end ||
+    !Number.isFinite(span) ||
+    span < 0 ||
+    span >= 366 ||
+    end > new Date().toISOString().slice(0, 10)
+  ) {
+    showError(
+      $("#range-error"),
+      "Choose a valid range of up to 366 days, ending today or earlier.",
+    );
+    return;
+  }
+  showError($("#range-error"), "");
+  state.range = { start_date: start, end_date: end };
+  await refresh({ details: true });
+});
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = element("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+$("#export-button").addEventListener("click", async () => {
+  const button = $("#export-button");
+  button.disabled = true;
+  try {
+    const query = new URLSearchParams({ q: state.q, status: state.status });
+    const blob = await api(`/links/export.csv?${query}`, {}, true);
+    downloadBlob(blob, "shortlink-export.csv");
+    toast("Export downloaded with your current search and status filters.");
+  } catch (error) {
+    if (error.name !== "StaleRequest") toast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+function toggleImport(open) {
+  $("#import-panel").hidden = !open;
+  $("#import-toggle").setAttribute("aria-expanded", String(open));
+  if (open) $("#csv-file").focus();
+  else $("#import-toggle").focus();
+}
+$("#import-toggle").addEventListener("click", () =>
+  toggleImport($("#import-panel").hidden),
+);
+$("#close-import").addEventListener("click", () => toggleImport(false));
+$("#download-template").addEventListener("click", () =>
+  downloadBlob(
+    new Blob(
+      [
+        "url,title,alias,expires_at\r\nhttps://example.com/product,Product launch,,\r\nhttps://example.com/help,Help centre,,\r\n",
+      ],
+      { type: "text/csv;charset=utf-8" },
+    ),
+    "shortlink-import-example.csv",
+  ),
+);
+$("#import-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const file = $("#csv-file").files[0];
+  showError($("#import-error"), "");
+  if (!file) return;
+  if (file.size > 512 * 1024)
+    return showError(
+      $("#import-error"),
+      "Choose a CSV file no larger than 512 KB.",
+    );
+  const button = $("#import-button");
+  button.disabled = true;
+  button.textContent = "Importing…";
+  try {
+    const report = await api("/links/bulk", {
+      method: "POST",
+      body: file,
+      headers: { "Content-Type": "text/csv" },
+    });
+    const results = $("#import-results");
+    results.replaceChildren(
+      element(
+        "h3",
+        "",
+        `${report.created_count} created · ${report.error_count} need attention`,
+      ),
+    );
+    const list = element("ul", "import-report");
+    for (const result of report.results) {
+      const row = element(
+        "li",
+        result.link ? "import-success" : "import-failure",
+      );
+      row.append(element("strong", "", `Row ${result.row}`));
+      if (result.link)
+        row.append(
+          safeLink(result.link.short_url, displayUrl(result.link.short_url)),
+        );
+      else
+        row.append(
+          element(
+            "span",
+            "",
+            result.error || "This row could not be imported.",
+          ),
+        );
+      list.append(row);
+    }
+    results.append(list);
+    results.hidden = false;
+    if (report.created_count) {
+      state.offset = 0;
+      state.q = "";
+      state.status = "all";
+      $("#search").value = "";
+      $("#status-filter").value = "all";
+      await refresh();
+    }
+    $("#import-form").reset();
+  } catch (error) {
+    if (error.name !== "StaleRequest")
+      showError($("#import-error"), error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Import links";
+  }
+});
+
+async function bootstrap() {
+  const today = new Date().toISOString().slice(0, 10);
+  $("#range-start").max = today;
+  $("#range-end").max = today;
+  $("#range-end").value = today;
+  $("#range-start").value = new Date(Date.now() - 6 * 86400000)
+    .toISOString()
+    .slice(0, 10);
+  try {
+    await enterWorkspace(await api("/auth/me"));
+  } catch (error) {
+    showSignIn(error.status === 401 ? "" : error.message);
+  }
+}
+bootstrap();

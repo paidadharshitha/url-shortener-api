@@ -51,75 +51,88 @@ jobs:
           curl --fail --silent --show-error \
             --retry 20 --retry-delay 1 --retry-connrefused --retry-all-errors \
             http://127.0.0.1:8000/docs > /dev/null
-      - name: Verify dashboard, management, redirects, and statistics
+      - name: Verify private workspace, transfers, analytics, and public redirects
         run: |
           python3 - <<'PY'
+          import csv
           import http.client
+          import io
           import json
+          from xml.etree import ElementTree
 
-          def request(method, path, body=None):
-              connection = http.client.HTTPConnection("127.0.0.1", 8000, timeout=5)
+          token = None
+          credentials = {"username": "smoke-user", "password": "smoke-test-password-123"}
+
+          def request(method, path, body=None, *, private=True, content_type="application/json"):
+              connection = http.client.HTTPConnection("127.0.0.1", 8000, timeout=10)
+              headers = {"Content-Type": content_type}
+              if private and token:
+                  headers["Authorization"] = f"Bearer {token}"
+              encoded = json.dumps(body) if body is not None and not isinstance(body, bytes) else body
               try:
-                  connection.request(
-                      method,
-                      path,
-                      body=json.dumps(body) if body is not None else None,
-                      headers={"Content-Type": "application/json"},
-                  )
+                  connection.request(method, path, body=encoded, headers=headers)
                   response = connection.getresponse()
-                  headers = {name.lower(): value for name, value in response.getheaders()}
-                  return response.status, headers, response.read()
+                  response_headers = {name.lower(): value for name, value in response.getheaders()}
+                  return response.status, response_headers, response.read()
               finally:
                   connection.close()
 
           status, headers, body = request("GET", "/")
-          assert status == 200, (status, body)
-          assert "text/html" in headers.get("content-type", ""), headers
+          assert status == 200 and "text/html" in headers.get("content-type", ""), (status, headers)
           assert b"<html" in body.lower(), body
-
           status, headers, body = request("GET", "/assets/app.js")
-          assert status == 200, (status, body)
-          assert "javascript" in headers.get("content-type", ""), headers
+          assert status == 200 and "javascript" in headers.get("content-type", ""), (status, headers)
           assert body, "Dashboard JavaScript is empty."
+          assert request("GET", "/links", private=False)[0] == 401
 
+          status, _, body = request("POST", "/auth/register", credentials, private=False)
+          assert status == 201, (status, body)
+          token = json.loads(body)["access_token"]
+          assert request("GET", "/auth/me")[0] == 200
           status, _, body = request("POST", "/links", {
               "url": "https://example.com/smoke", "alias": "smoke-link", "title": "Smoke test"
           })
-          assert status == 201, (status, body)
-          assert json.loads(body)["code"] == "smoke-link", body
+          assert status == 201 and json.loads(body)["code"] == "smoke-link", (status, body)
 
-          status, headers, body = request("GET", "/smoke-link")
-          assert status == 302, (status, body)
-          assert headers.get("location") == "https://example.com/smoke", headers
-
+          status, headers, body = request("GET", "/smoke-link", private=False)
+          assert status == 302 and headers.get("location") == "https://example.com/smoke", (status, headers)
           status, _, body = request("GET", "/links/smoke-link/stats")
           assert status == 200, (status, body)
           stats = json.loads(body)
-          assert stats["total_clicks"] == 1, stats
-          assert stats["last_clicked_at"] is not None, stats
-
+          assert stats["total_clicks"] == 1 and stats["last_clicked_at"] is not None, stats
           status, _, body = request("PATCH", "/links/smoke-link", {"is_active": False})
-          assert status == 200, (status, body)
-          assert json.loads(body)["is_active"] is False, body
-          status, _, body = request("GET", "/smoke-link")
-          assert status == 410, (status, body)
-          assert "paused" in json.loads(body)["detail"].lower(), body
-          status, _, body = request("GET", "/links/smoke-link/stats")
-          assert status == 200, (status, body)
-          assert json.loads(body)["total_clicks"] == 1, body
-
+          assert status == 200 and json.loads(body)["is_active"] is False, (status, body)
+          status, _, body = request("GET", "/smoke-link", private=False)
+          assert status == 410 and "paused" in json.loads(body)["detail"].lower(), (status, body)
+          assert json.loads(request("GET", "/links/smoke-link/stats")[2])["total_clicks"] == 1
           status, _, body = request("PATCH", "/links/smoke-link", {"is_active": True})
+          assert status == 200 and json.loads(body)["is_active"] is True, (status, body)
+          assert request("GET", "/smoke-link", private=False)[0] == 302
+
+          status, headers, body = request("GET", "/links/smoke-link/qr.svg")
+          assert status == 200 and "image/svg+xml" in headers.get("content-type", ""), (status, headers)
+          assert ElementTree.fromstring(body).tag.endswith("svg")
+          raw_csv = b"url,title,alias\nhttps://example.com/imported,Imported,batch-smoke\ninvalid,Rejected,\n"
+          status, _, body = request("POST", "/links/bulk", raw_csv, content_type="text/csv")
           assert status == 200, (status, body)
-          assert json.loads(body)["is_active"] is True, body
-          status, headers, body = request("GET", "/smoke-link")
-          assert status == 302, (status, body)
-          assert headers.get("location") == "https://example.com/smoke", headers
-          status, _, body = request("GET", "/links/smoke-link/stats")
+          result = json.loads(body)
+          assert result["created_count"] == result["error_count"] == 1, result
+          assert [row["status"] for row in result["results"]] == [201, 422], result
+          status, headers, body = request("GET", "/links/export.csv")
+          assert status == 200 and "text/csv" in headers.get("content-type", ""), (status, headers)
+          exported = list(csv.DictReader(io.StringIO(body.decode("utf-8-sig"))))
+          assert {row["code"] for row in exported} == {"smoke-link", "batch-smoke"}, exported
+          status, _, body = request("GET", "/links/overview?days=30")
           assert status == 200, (status, body)
-          assert json.loads(body)["total_clicks"] == 2, body
-          print("Dashboard, creation, pause/resume, redirects, and statistics passed.")
+          overview = json.loads(body)
+          assert len(overview["daily_clicks"]) == 30 and overview["period_clicks"] == 2, overview
+          status, _, body = request("GET", "/links/smoke-link/stats?days=90")
+          assert status == 200, (status, body)
+          stats = json.loads(body)
+          assert len(stats["daily_clicks"]) == 90 and stats["total_clicks"] == 2, stats
+          print("Authentication, public redirects, pause/resume, QR, CSV, and analytics passed.")
           PY
-      - name: Restart container and verify persistence
+      - name: Restart container and verify account and link persistence
         run: |
           docker restart url-shortener-ci
           curl --fail --silent --show-error \
@@ -127,16 +140,28 @@ jobs:
             http://127.0.0.1:8000/docs > /dev/null
           python3 - <<'PY'
           import json
-          from urllib.request import urlopen
+          from urllib.request import Request, urlopen
 
-          with urlopen("http://127.0.0.1:8000/links/smoke-link/stats", timeout=5) as response:
+          credentials = {"username": "smoke-user", "password": "smoke-test-password-123"}
+          login = Request(
+              "http://127.0.0.1:8000/auth/login",
+              data=json.dumps(credentials).encode(),
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urlopen(login, timeout=10) as response:
+              token = json.load(response)["access_token"]
+          stats_request = Request(
+              "http://127.0.0.1:8000/links/smoke-link/stats",
+              headers={"Authorization": f"Bearer {token}"},
+          )
+          with urlopen(stats_request, timeout=10) as response:
               assert response.status == 200, response.status
               stats = json.load(response)
-          assert stats["code"] == "smoke-link", stats
-          assert stats["url"] == "https://example.com/smoke", stats
-          assert stats["total_clicks"] == 2, stats
+          assert stats["code"] == "smoke-link" and stats["url"] == "https://example.com/smoke", stats
+          assert stats["total_clicks"] == stats["period_clicks"] == 2, stats
           assert stats["last_clicked_at"] is not None, stats
-          print("Link and click statistics persisted after restart.")
+          print("Account, ownership, link, and click statistics persisted after restart.")
           PY
       - name: Show container logs on failure
         if: failure()

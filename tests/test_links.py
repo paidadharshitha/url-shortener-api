@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
-from tests.conftest import MutableClock
+from tests.conftest import MutableClock, authenticate
 
 TARGET_URL = "https://example.com/articles/hello?source=sharing&tag=python#examples"
 
@@ -143,13 +143,14 @@ def test_link_created_after_missing_lookup_is_not_misreported_as_expired(
 ) -> None:
     service = client.app.state.link_service
     record_click = service.repository.record_click
+    owner_id = client.get("/auth/me").json()["user"]["id"]
 
     def lookup_then_create(code: str, instant: datetime):
         result = record_click(code, instant)
         assert result is None
         # A concurrent creator can commit after the lookup transaction finishes,
         # before the redirect handler decides how to classify its result.
-        service.create(TARGET_URL, code, None)
+        service.create(TARGET_URL, code, None, owner_id=owner_id)
         return result
 
     with monkeypatch.context() as patch:
@@ -165,6 +166,7 @@ def test_link_created_after_missing_lookup_is_not_misreported_as_expired(
 def test_link_without_expiry_remains_available(client: TestClient, clock: MutableClock) -> None:
     link = create_link(client, expires_at=None)
     clock.advance(days=3650)
+    authenticate(client)
 
     assert client.get(f"/{link['code']}").status_code == 302
     assert client.get(f"/links/{link['code']}/stats").json()["is_expired"] is False
@@ -230,12 +232,14 @@ def test_links_and_click_stats_persist_across_app_restart(
 ) -> None:
     expiry = clock.now + timedelta(days=1)
     with TestClient(create_app(settings, clock=clock), follow_redirects=False) as first_client:
+        authenticate(first_client, register=True)
         original = create_link(first_client, alias="persistent-link", expires_at=expiry.isoformat())
         clock.advance(minutes=1)
         first_client.get("/persistent-link")
         clicked_at = clock.now
 
     with TestClient(create_app(settings, clock=clock), follow_redirects=False) as restarted_client:
+        authenticate(restarted_client)
         response = restarted_client.get("/links/persistent-link/stats")
         assert response.status_code == 200
         stats = response.json()

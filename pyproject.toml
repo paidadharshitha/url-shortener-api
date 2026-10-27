@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shortlink-api"
-version = "1.1.0"
+version = "2.0.0"
 description = "A small, reliable URL shortener built with FastAPI and SQLite."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,6 +13,7 @@ dependencies = [
     "pydantic>=2.14,<3",
     "starlette>=1.10,<2",
     "uvicorn[standard]>=0.54,<0.55",
+    "qrcode>=8.2,<9",
 ]
 
 [project.optional-dependencies]
