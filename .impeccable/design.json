@@ -1,0 +1,504 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T05:59:21.463142+00:00",
+  "title": "Design System: Shortlink",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Ink Green",
+        "tonalRamp": [
+          "oklch(15% 0.0865 163.89)",
+          "oklch(26% 0.0865 163.89)",
+          "oklch(38% 0.0865 163.89)",
+          "oklch(49% 0.0865 163.89)",
+          "oklch(61% 0.0865 163.89)",
+          "oklch(72% 0.0865 163.89)",
+          "oklch(84% 0.0865 163.89)",
+          "oklch(95% 0.0865 163.89)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Deep Ink Green",
+        "tonalRamp": [
+          "oklch(15% 0.0727 163.15)",
+          "oklch(26% 0.0727 163.15)",
+          "oklch(38% 0.0727 163.15)",
+          "oklch(49% 0.0727 163.15)",
+          "oklch(61% 0.0727 163.15)",
+          "oklch(72% 0.0727 163.15)",
+          "oklch(84% 0.0727 163.15)",
+          "oklch(95% 0.0727 163.15)"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Washed Green",
+        "tonalRamp": [
+          "oklch(15% 0.0149 158.25)",
+          "oklch(26% 0.0149 158.25)",
+          "oklch(38% 0.0149 158.25)",
+          "oklch(49% 0.0149 158.25)",
+          "oklch(61% 0.0149 158.25)",
+          "oklch(72% 0.0149 158.25)",
+          "oklch(84% 0.0149 158.25)",
+          "oklch(95% 0.0149 158.25)"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Desk Green",
+        "tonalRamp": [
+          "oklch(15% 0.0041 157.18)",
+          "oklch(26% 0.0041 157.18)",
+          "oklch(38% 0.0041 157.18)",
+          "oklch(49% 0.0041 157.18)",
+          "oklch(61% 0.0041 157.18)",
+          "oklch(72% 0.0041 157.18)",
+          "oklch(84% 0.0041 157.18)",
+          "oklch(95% 0.0041 157.18)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Sheet White",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Notebook Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0289 166.18)",
+          "oklch(26% 0.0289 166.18)",
+          "oklch(38% 0.0289 166.18)",
+          "oklch(49% 0.0289 166.18)",
+          "oklch(61% 0.0289 166.18)",
+          "oklch(72% 0.0289 166.18)",
+          "oklch(84% 0.0289 166.18)",
+          "oklch(95% 0.0289 166.18)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Soft Graphite Green",
+        "tonalRamp": [
+          "oklch(15% 0.0210 165.79)",
+          "oklch(26% 0.0210 165.79)",
+          "oklch(38% 0.0210 165.79)",
+          "oklch(49% 0.0210 165.79)",
+          "oklch(61% 0.0210 165.79)",
+          "oklch(72% 0.0210 165.79)",
+          "oklch(84% 0.0210 165.79)",
+          "oklch(95% 0.0210 165.79)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Sheet Rule",
+        "tonalRamp": [
+          "oklch(15% 0.0125 156.98)",
+          "oklch(26% 0.0125 156.98)",
+          "oklch(38% 0.0125 156.98)",
+          "oklch(49% 0.0125 156.98)",
+          "oklch(61% 0.0125 156.98)",
+          "oklch(72% 0.0125 156.98)",
+          "oklch(84% 0.0125 156.98)",
+          "oklch(95% 0.0125 156.98)"
+        ]
+      },
+      "field-line": {
+        "role": "neutral",
+        "displayName": "Field Rule",
+        "tonalRamp": [
+          "oklch(15% 0.0177 159.07)",
+          "oklch(26% 0.0177 159.07)",
+          "oklch(38% 0.0177 159.07)",
+          "oklch(49% 0.0177 159.07)",
+          "oklch(61% 0.0177 159.07)",
+          "oklch(72% 0.0177 159.07)",
+          "oklch(84% 0.0177 159.07)",
+          "oklch(95% 0.0177 159.07)"
+        ]
+      },
+      "row-hover": {
+        "role": "neutral",
+        "displayName": "Page Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0034 145.55)",
+          "oklch(26% 0.0034 145.55)",
+          "oklch(38% 0.0034 145.55)",
+          "oklch(49% 0.0034 145.55)",
+          "oklch(61% 0.0034 145.55)",
+          "oklch(72% 0.0034 145.55)",
+          "oklch(84% 0.0034 145.55)",
+          "oklch(95% 0.0034 145.55)"
+        ]
+      },
+      "row-selected": {
+        "role": "neutral",
+        "displayName": "Selected Sheet",
+        "tonalRamp": [
+          "oklch(15% 0.0099 155.10)",
+          "oklch(26% 0.0099 155.10)",
+          "oklch(38% 0.0099 155.10)",
+          "oklch(49% 0.0099 155.10)",
+          "oklch(61% 0.0099 155.10)",
+          "oklch(72% 0.0099 155.10)",
+          "oklch(84% 0.0099 155.10)",
+          "oklch(95% 0.0099 155.10)"
+        ]
+      },
+      "chart-bar": {
+        "role": "primary",
+        "displayName": "Chart Sage",
+        "tonalRamp": [
+          "oklch(15% 0.0483 161.52)",
+          "oklch(26% 0.0483 161.52)",
+          "oklch(38% 0.0483 161.52)",
+          "oklch(49% 0.0483 161.52)",
+          "oklch(61% 0.0483 161.52)",
+          "oklch(72% 0.0483 161.52)",
+          "oklch(84% 0.0483 161.52)",
+          "oklch(95% 0.0483 161.52)"
+        ]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Error Ink",
+        "tonalRamp": [
+          "oklch(15% 0.1489 24.56)",
+          "oklch(26% 0.1489 24.56)",
+          "oklch(38% 0.1489 24.56)",
+          "oklch(49% 0.1489 24.56)",
+          "oklch(61% 0.1489 24.56)",
+          "oklch(72% 0.1489 24.56)",
+          "oklch(84% 0.1489 24.56)",
+          "oklch(95% 0.1489 24.56)"
+        ]
+      },
+      "danger-soft": {
+        "role": "status",
+        "displayName": "Error Ground",
+        "tonalRamp": [
+          "oklch(15% 0.0143 28.01)",
+          "oklch(26% 0.0143 28.01)",
+          "oklch(38% 0.0143 28.01)",
+          "oklch(49% 0.0143 28.01)",
+          "oklch(61% 0.0143 28.01)",
+          "oklch(72% 0.0143 28.01)",
+          "oklch(84% 0.0143 28.01)",
+          "oklch(95% 0.0143 28.01)"
+        ]
+      },
+      "active-ink": {
+        "role": "status",
+        "displayName": "Active Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0856 152.79)",
+          "oklch(26% 0.0856 152.79)",
+          "oklch(38% 0.0856 152.79)",
+          "oklch(49% 0.0856 152.79)",
+          "oklch(61% 0.0856 152.79)",
+          "oklch(72% 0.0856 152.79)",
+          "oklch(84% 0.0856 152.79)",
+          "oklch(95% 0.0856 152.79)"
+        ]
+      },
+      "active-soft": {
+        "role": "status",
+        "displayName": "Active Ground",
+        "tonalRamp": [
+          "oklch(15% 0.0133 152.60)",
+          "oklch(26% 0.0133 152.60)",
+          "oklch(38% 0.0133 152.60)",
+          "oklch(49% 0.0133 152.60)",
+          "oklch(61% 0.0133 152.60)",
+          "oklch(72% 0.0133 152.60)",
+          "oklch(84% 0.0133 152.60)",
+          "oklch(95% 0.0133 152.60)"
+        ]
+      },
+      "paused-ink": {
+        "role": "status",
+        "displayName": "Paused Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0968 69.80)",
+          "oklch(26% 0.0968 69.80)",
+          "oklch(38% 0.0968 69.80)",
+          "oklch(49% 0.0968 69.80)",
+          "oklch(61% 0.0968 69.80)",
+          "oklch(72% 0.0968 69.80)",
+          "oklch(84% 0.0968 69.80)",
+          "oklch(95% 0.0968 69.80)"
+        ]
+      },
+      "paused-soft": {
+        "role": "status",
+        "displayName": "Paused Ground",
+        "tonalRamp": [
+          "oklch(15% 0.0300 83.63)",
+          "oklch(26% 0.0300 83.63)",
+          "oklch(38% 0.0300 83.63)",
+          "oklch(49% 0.0300 83.63)",
+          "oklch(61% 0.0300 83.63)",
+          "oklch(72% 0.0300 83.63)",
+          "oklch(84% 0.0300 83.63)",
+          "oklch(95% 0.0300 83.63)"
+        ]
+      },
+      "expired-ink": {
+        "role": "status",
+        "displayName": "Expired Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0135 153.43)",
+          "oklch(26% 0.0135 153.43)",
+          "oklch(38% 0.0135 153.43)",
+          "oklch(49% 0.0135 153.43)",
+          "oklch(61% 0.0135 153.43)",
+          "oklch(72% 0.0135 153.43)",
+          "oklch(84% 0.0135 153.43)",
+          "oklch(95% 0.0135 153.43)"
+        ]
+      },
+      "expired-soft": {
+        "role": "status",
+        "displayName": "Expired Ground",
+        "tonalRamp": [
+          "oklch(15% 0.0017 145.56)",
+          "oklch(26% 0.0017 145.56)",
+          "oklch(38% 0.0017 145.56)",
+          "oklch(49% 0.0017 145.56)",
+          "oklch(61% 0.0017 145.56)",
+          "oklch(72% 0.0017 145.56)",
+          "oklch(84% 0.0017 145.56)",
+          "oklch(95% 0.0017 145.56)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Page Heading",
+        "purpose": "The dashboard page heading; 27px on phones."
+      },
+      "headline": {
+        "displayName": "Section Heading",
+        "purpose": "Base section heading; local component sizes are documented in DESIGN.md."
+      },
+      "title": {
+        "displayName": "Link Title",
+        "purpose": "Desktop record title; 13px with wrapping on phones."
+      },
+      "body": {
+        "displayName": "Interface Body",
+        "purpose": "Base interface type; supporting copy uses the smaller component sizes."
+      },
+      "label": {
+        "displayName": "Form Label",
+        "purpose": "Labels above inputs."
+      },
+      "button": {
+        "displayName": "Action Label",
+        "purpose": "Primary, secondary, and quiet buttons."
+      },
+      "address": {
+        "displayName": "Short Address",
+        "purpose": "Monospace short addresses; 11px in phone records."
+      },
+      "metric": {
+        "displayName": "Summary Value",
+        "purpose": "Tabular numeric totals; 25px on phones."
+      }
+    },
+    "shadows": [
+      {
+        "name": "toast",
+        "value": "0 6px 24px #153e2626",
+        "purpose": "Transient feedback only; regular panels are flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "surface-ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Created-result, detail-panel, and toast reveals."
+      },
+      {
+        "name": "created-reveal",
+        "value": "0.3s",
+        "purpose": "Created link result."
+      },
+      {
+        "name": "detail-reveal",
+        "value": "0.28s",
+        "purpose": "Inline link details."
+      },
+      {
+        "name": "toast-reveal",
+        "value": "0.2s",
+        "purpose": "Toast entry."
+      },
+      {
+        "name": "surface-keyframes",
+        "value": "from { opacity: 0.75; translate: 0 6px; } to { opacity: 1; translate: 0 0; }",
+        "purpose": "Shared reveal geometry."
+      },
+      {
+        "name": "control-transition",
+        "value": "background 0.16s, border-color 0.16s",
+        "purpose": "Button hover changes."
+      },
+      {
+        "name": "chevron-transition",
+        "value": "transform 0.2s",
+        "purpose": "Custom-options disclosure."
+      },
+      {
+        "name": "spinner",
+        "value": "spin 0.8s linear infinite",
+        "purpose": "Loading indicator."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none !important; transition: none !important; scroll-behavior: auto",
+        "purpose": "Immediate updates when reduced motion is requested."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-min",
+        "value": "1700px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1250px"
+      },
+      {
+        "name": "stacked-max",
+        "value": "1000px"
+      },
+      {
+        "name": "phone-max",
+        "value": "700px"
+      },
+      {
+        "name": "narrow-max",
+        "value": "360px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Compact task action with visible keyboard focus and a disabled state.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Create link</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:9px 15px;border:1px solid var(--line,#dce5df);border-radius:8px;font-family:var(--font,Manrope,Arial,sans-serif);font-size:12px;font-weight:700;line-height:1.6;cursor:pointer;white-space:nowrap;transition:background .16s,border-color .16s;background:var(--accent,#176448);color:#fff;border-color:var(--accent,#176448);}.ds-button-primary:not(:disabled):hover{background:var(--accent-hover,#104d36);border-color:var(--accent-hover,#104d36);}.ds-button-primary:focus-visible{outline:3px solid var(--accent,#176448);outline-offset:4px;}.ds-button-primary:disabled{opacity:.45;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none;}}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Compact task action with visible keyboard focus and a disabled state.",
+      "html": "<button class=\"ds-button-secondary\" type=\"button\">Refresh</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:9px 15px;border:1px solid var(--line,#dce5df);border-radius:8px;font-family:var(--font,Manrope,Arial,sans-serif);font-size:12px;font-weight:700;line-height:1.6;cursor:pointer;white-space:nowrap;transition:background .16s,border-color .16s;background:#fff;color:var(--ink,#1d3028);}.ds-button-secondary:not(:disabled):hover{background:#edf3ef;border-color:#b9d0c2;}.ds-button-secondary:focus-visible{outline:3px solid var(--accent,#176448);outline-offset:4px;}.ds-button-secondary:disabled{opacity:.45;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none;}}"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Compact task action with visible keyboard focus and a disabled state.",
+      "html": "<button class=\"ds-button-quiet\" type=\"button\">Create a link</button>",
+      "css": ".ds-button-quiet{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:9px 15px;border:1px solid var(--line,#dce5df);border-radius:8px;font-family:var(--font,Manrope,Arial,sans-serif);font-size:12px;font-weight:700;line-height:1.6;cursor:pointer;white-space:nowrap;transition:background .16s,border-color .16s;background:transparent;color:var(--ink,#1d3028);}.ds-button-quiet:not(:disabled):hover{background:#edf3ef;border-color:#b9d0c2;}.ds-button-quiet:focus-visible{outline:3px solid var(--accent,#176448);outline-offset:4px;}.ds-button-quiet:disabled{opacity:.45;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-button-quiet{transition:none;}}"
+    },
+    {
+      "name": "Destination Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labeled destination input with an accent caret and strong keyboard focus.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-destination\">Destination URL</label><input class=\"ds-field\" id=\"ds-destination\" type=\"url\" placeholder=\"https://example.com/your-long-link\">",
+      "css": ".ds-field-label{display:block;margin-bottom:7px;font-family:var(--font,Manrope,Arial,sans-serif);font-size:11px;font-weight:700;line-height:1.6;color:var(--ink,#1d3028);}.ds-field{width:100%;min-height:42px;padding:10px 12px;border:1px solid #cedbd3;border-radius:7px;background:#fff;color:var(--ink,#1d3028);font-family:var(--font,Manrope,Arial,sans-serif);font-size:12px;line-height:1.6;caret-color:var(--accent,#176448);}.ds-field::placeholder{color:var(--muted,#62716a);opacity:1;}.ds-field:focus{border-color:var(--accent,#176448);}.ds-field:focus-visible{outline:3px solid var(--accent,#176448);outline-offset:4px;}"
+    },
+    {
+      "name": "Notebook Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-current",
+      "description": "A compact index with tinted current-page treatment.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Preview navigation\"><a class=\"ds-nav-item ds-current\" href=\"#links\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10 13a5 5 0 0 0 7 .7l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7-.7l-3 3a5 5 0 0 0 7 7l1.7-1.7\"/></svg>Your links</a><a class=\"ds-nav-item\" href=\"#activity\">Activity</a></nav>",
+      "css": ".ds-nav{display:grid;gap:7px;}.ds-nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;color:var(--muted,#62716a);text-decoration:none;font-family:var(--font,Manrope,Arial,sans-serif);font-size:13px;font-weight:600;line-height:1.6;white-space:nowrap;}.ds-nav-item:hover{background:var(--canvas,#f5f8f6);color:var(--ink,#1d3028);}.ds-nav-item.ds-current{background:var(--accent-soft,#e8f3ec);color:var(--accent,#176448);}.ds-nav-item:focus-visible{outline:3px solid var(--accent,#176448);outline-offset:4px;}.ds-nav-item svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}"
+    },
+    {
+      "name": "Link Statuses",
+      "kind": "chip",
+      "refersTo": "status-active",
+      "description": "Noninteractive status labels pair words and dots with state-specific colors.",
+      "html": "<span class=\"ds-status ds-active\">Active</span> <span class=\"ds-status ds-paused\">Paused</span> <span class=\"ds-status ds-expired\">Expired</span>",
+      "css": ".ds-status{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:5px;font-family:var(--font,Manrope,Arial,sans-serif);font-size:10px;font-weight:600;line-height:1.4;white-space:nowrap;}.ds-status::before{content:\"\";width:4px;height:4px;border-radius:50%;background:currentColor;}.ds-active{background:#edf6ef;color:#28613c;}.ds-paused{background:#fff4df;color:#865819;}.ds-expired{background:#f1f2f1;color:#646c66;}@media(max-width:700px){.ds-status{font-size:11px;}}"
+    },
+    {
+      "name": "Composer Sheet",
+      "kind": "card",
+      "refersTo": "composer",
+      "description": "A white, bordered panel with no shadow and compact task headings.",
+      "html": "<section class=\"ds-sheet\"><h2>Create a short link</h2><p>Make a long story short.</p></section>",
+      "css": ".ds-sheet{padding:25px;background:var(--surface,#fff);color:var(--ink,#1d3028);border:1px solid var(--line,#dce5df);border-radius:var(--radius,14px);font-family:var(--font,Manrope,Arial,sans-serif);}.ds-sheet h2{margin:0;font-size:16px;font-weight:750;line-height:1.4;letter-spacing:-.025em;}.ds-sheet p{margin:5px 0 0;font-size:12px;line-height:1.6;color:var(--muted,#62716a);}@media(max-width:1250px){.ds-sheet{padding:22px;}}@media(max-width:700px){.ds-sheet{padding:20px;}.ds-sheet h2{font-size:14px;}.ds-sheet p{font-size:11px;}}@media(max-width:360px){.ds-sheet h2{font-size:13px;}}"
+    },
+    {
+      "name": "Link Ledger Record",
+      "kind": "custom",
+      "refersTo": "ledger",
+      "description": "A desktop table record becomes a readable, wrapping phone entry. Preview content is illustrative.",
+      "html": "<table class=\"ds-ledger\"><tbody><tr><td class=\"ds-link\"><button class=\"ds-link-title\" type=\"button\">Product documentation</button><a class=\"ds-address\" href=\"#details\">localhost:8001/docs-link</a><div class=\"ds-destination\">example.com/documentation</div></td><td><span class=\"ds-status-active\">Active</span></td><td class=\"ds-clicks\">12 <span>clicks</span></td></tr></tbody></table>",
+      "css": ".ds-ledger{width:100%;border-collapse:collapse;text-align:left;background:#fff;color:var(--ink,#1d3028);font-family:var(--font,Manrope,Arial,sans-serif);}.ds-ledger td{padding:17px 22px;border-bottom:1px solid #e9efeb;font-size:11px;line-height:1.6;}.ds-ledger tr:hover{background:#fbfdfb;}.ds-link{min-width:170px;max-width:380px;}.ds-link-title{display:block;max-width:100%;padding:0;border:0;background:none;color:var(--ink,#1d3028);font-family:var(--font,Manrope,Arial,sans-serif);font-size:12px;font-weight:700;line-height:1.6;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ds-link-title:hover{color:var(--accent,#176448);}.ds-link-title:focus-visible{outline:3px solid var(--accent,#176448);outline-offset:4px;}.ds-address{display:inline-block;margin-top:5px;max-width:100%;color:var(--accent,#176448);font:10px/1.6 var(--mono,ui-monospace,SFMono-Regular,Consolas,monospace);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ds-address:focus-visible{outline:3px solid var(--accent,#176448);outline-offset:4px;}.ds-destination{margin-top:3px;color:var(--muted,#62716a);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ds-status-active{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:5px;background:#edf6ef;color:#28613c;font-size:10px;font-weight:600;line-height:1.4;}.ds-status-active::before{content:\"\";width:4px;height:4px;border-radius:50%;background:currentColor;}.ds-clicks{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}.ds-clicks span{display:none;}@media(max-width:700px){.ds-ledger,.ds-ledger tbody{display:block;}.ds-ledger tr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px 16px;padding:16px;border-bottom:1px solid var(--line,#dce5df);}.ds-ledger td{padding:0;border:0;min-width:0;}.ds-link{grid-column:1/-1;max-width:none;}.ds-link-title{font-size:13px;white-space:normal;overflow-wrap:anywhere;}.ds-address,.ds-destination{font-size:11px;white-space:normal;overflow-wrap:anywhere;max-width:none;}.ds-status-active{font-size:11px;}.ds-clicks span{display:inline;font-weight:400;color:var(--muted,#62716a);}}"
+    },
+    {
+      "name": "Daily Click Chart",
+      "kind": "custom",
+      "description": "Sage bars and a green latest day against dashed rules. Preview is a zero-data chart; live charts use API counts.",
+      "html": "<svg class=\"ds-chart\" viewBox=\"0 0 360 126\" role=\"img\" aria-label=\"Preview: zero clicks\"><path class=\"ds-grid\" d=\"M29 14H357M29 57H357M29 100H357\"/><text x=\"21\" y=\"103\" text-anchor=\"end\">0</text><text x=\"21\" y=\"60\" text-anchor=\"end\">2</text><text x=\"21\" y=\"17\" text-anchor=\"end\">4</text><text x=\"52\" y=\"120\" text-anchor=\"middle\">Mon</text><text x=\"98\" y=\"120\" text-anchor=\"middle\">Tue</text><text x=\"144\" y=\"120\" text-anchor=\"middle\">Wed</text><text x=\"190\" y=\"120\" text-anchor=\"middle\">Thu</text><text x=\"236\" y=\"120\" text-anchor=\"middle\">Fri</text><text x=\"282\" y=\"120\" text-anchor=\"middle\">Sat</text><text class=\"ds-today\" x=\"328\" y=\"120\" text-anchor=\"middle\">Sun</text></svg>",
+      "css": ".ds-chart{display:block;width:100%;height:auto;max-height:180px;overflow:visible;}.ds-grid{fill:none;stroke:#e0e9e3;stroke-dasharray:3 4;}.ds-chart text{font-family:Manrope,sans-serif;font-size:9px;fill:#65766b;}.ds-chart .ds-today{fill:#176448;}.ds-chart rect{fill:#a9ceba;}.ds-chart rect:last-of-type,.ds-chart rect:hover{fill:var(--accent,#176448);}"
+    },
+    {
+      "name": "Feedback Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Polite transient feedback; the only surface with a drop shadow.",
+      "html": "<div class=\"ds-toast\" role=\"status\" aria-live=\"polite\">Short link copied. Ready to share.</div>",
+      "css": ".ds-toast{display:inline-block;max-width:calc(100% - 32px);padding:12px 20px;border-radius:9px;background:var(--ink,#1d3028);color:#fff;font-family:var(--font,Manrope,Arial,sans-serif);font-size:12px;line-height:1.6;box-shadow:0 6px 24px #153e2626;animation:ds-surface-in .2s var(--ease,cubic-bezier(.16,1,.3,1));}@keyframes ds-surface-in{from{opacity:.75;translate:0 6px;}to{opacity:1;translate:0 0;}}@media(prefers-reduced-motion:reduce){.ds-toast{animation:none;}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A working link notebook",
+    "overview": "White sheets sit on a cool pale-green desk. Green ink identifies actions, selected navigation, and short addresses; Manrope keeps the workspace clear and compact. Thin rules and stable alignment give the interface the feel of an orderly notebook.\n\nThe system supports repeated creation, scanning, and inspection. It uses restrained surface boundaries, direct labels, and brief state changes. The dashboard's particular composition is recorded in `.impeccable/surfaces/dashboard.md`; this document records the implemented visual vocabulary.",
+    "keyCharacteristics": [
+      "White panels on a pale-green canvas.",
+      "Green action ink and warm amber for paused links.",
+      "Manrope for interface text; monospace for short addresses.",
+      "Flat, bordered surfaces with compact desktop density.",
+      "Readable stacked records on phones."
+    ],
+    "rules": [],
+    "dos": [
+      "**Do** reuse the green action palette, white sheets, and pale canvas.",
+      "**Do** keep phone link titles and addresses readable with wrapping and the implemented 13px/11px sizes.",
+      "**Do** preserve visible keyboard focus, focus restoration, and immediate reduced-motion updates.",
+      "**Do** pair status colors with words and show real API values in charts and counts."
+    ],
+    "donts": [
+      "**Don't** add shadows to regular panels or use decorative gradients to separate sections.",
+      "**Don't** squeeze the desktop table columns into a phone-width grid.",
+      "**Don't** use monospace for navigation, headings, or supporting prose.",
+      "**Don't** replace task controls or honest empty states with ornamental metric tiles or simulated chart data."
+    ]
+  }
+}
