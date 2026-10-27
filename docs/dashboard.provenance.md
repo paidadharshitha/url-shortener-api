@@ -2,15 +2,16 @@
 
 Asset: `docs/dashboard.jpg`.
 
-The image is a native browser screenshot of the implemented Shortlink dashboard, captured on 2026-10-27 from the separate QA instance at `http://localhost:8002/`. It is not a generated image or a visual mockup. The capture record supplied by the build agent specifies no image editing; the shipping file preserves the native capture bytes.
+Native browser screenshot of the implemented Shortlink dashboard, captured on 2026-10-27 from the separate QA instance at `http://127.0.0.1:8002/`. It shows the created short link and automatic QR preview in the `qa-workspace` account. It is not a generated image or a visual mockup. The build agent reports no image editing; the shipping file preserves the source capture bytes.
 
-- Source capture: `.impeccable/review/v2/desktop.png`.
-- Native format and dimensions: JPEG, 1440 × 1295 pixels. The source capture has a `.png` filename, but its bytes are JPEG. The shipping copy was renamed from `dashboard.png` to `dashboard.jpg` to match that encoding; no conversion occurred.
-- Account shown: the local `qa-workspace` test account.
-- Data: three deliberately synthetic, visibly labelled records — Demo · Support, Demo · Documentation, and Demo · Product launch — using example.com destinations.
-- Activity: five actual QA redirect requests, recorded by the application, with per-link totals of 1, 1, and 3. These are test clicks, not customer activity or illustrative chart values. The screenshot selects the 90-day UTC range, 2026-07-30 through 2026-10-27, and shows the resulting API totals.
-- Production implication: none. The image documents a local QA workspace; it does not imply a public hosted deployment or depict the user's existing stored records.
+- Source capture: `.impeccable/review/qr-flow/desktop.jpg`.
+- Native encoding and dimensions: JPEG, 1440 × 1543 pixels. No conversion or pixel edits occurred.
+- Data: four visibly Demo-labelled QA records — QR sharing, Support, Documentation, and Product launch. QR sharing points to `https://www.wikipedia.org/?utm_source=qr-demo&utm_campaign=sharing`; the other three use example.com destinations.
+- Activity: six actual QA redirects recorded by the application, with per-link totals of 1, 1, 1, and 3 in that order. Creating and downloading the new QR caused no clicks. The build agent verified that the new result's Open link action redirected in the browser and added the QR sharing record's one click.
+- Selected period: Last 7 days, 2026-10-21 through 2026-10-27, with explicit UTC boundaries. The screenshot shows six clicks in the selected period and six clicks today.
+- Visible state: the created result includes Copy link, Open link, the QR preview, Download QR (SVG), and the local-address sharing explanation. More tools is collapsed.
+- Production implication: none. These are test records and actual test clicks in an isolated local QA workspace, not customer activity or the user's existing stored records. The image does not imply a public hosted deployment.
 
-The documentation check independently opened the capture, verified the displayed labels and counts, inspected the API-backed chart path, and confirmed the shipping file is byte-identical to the source capture. It did not repeat the redirect requests.
+The documentation check independently opened the shipping image, verified its visible labels, counts, period, and result state, inspected the corresponding source paths, and confirmed matching encoding, dimensions, and hashes. It did not repeat the browser interactions or redirect requests; those interaction results come from the build agent.
 
-SHA-256 for both files: `f60b196498124ea4f569e9cf176fddf865a7ef41c4107f00b60724ae8db27d8c`.
+SHA-256 for source and shipping files: `7c7ff9c7e68a1d0580c91d99450d5d4ff126ddfa20268b4aed8f9950071c03f7`.

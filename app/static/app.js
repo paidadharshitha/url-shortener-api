@@ -38,6 +38,8 @@ let lastDetailTrigger;
 let authMode = "login";
 let sessionEpoch = 0;
 let qrObjectUrl;
+let createdQrObjectUrl;
+let createdQrRequest = 0;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -513,6 +515,87 @@ function formField(form, id, label, value, type = "text") {
   return input;
 }
 
+function sharingNote(url) {
+  const hostname = new URL(url).hostname.toLowerCase();
+  if (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    /^127(?:\.\d{1,3}){3}$/.test(hostname) ||
+    hostname === "[::1]" ||
+    hostname === "0.0.0.0"
+  )
+    return "This is a local link: it opens on this computer. To share it with a phone or another person, use a publicly hosted address.";
+  return "";
+}
+
+function fillQrPreview(container, blob, objectUrl, link) {
+  const picture = element("img");
+  picture.src = objectUrl;
+  picture.alt = `QR code for ${linkName(link)}`;
+  picture.width = 192;
+  picture.height = 192;
+  const download = element(
+    "button",
+    "button button-small",
+    "Download QR (SVG)",
+  );
+  download.type = "button";
+  download.addEventListener("click", () =>
+    downloadBlob(blob, `${link.code}.svg`),
+  );
+  container.replaceChildren(picture, download);
+}
+
+function clearCreatedResult() {
+  createdQrRequest++;
+  if (createdQrObjectUrl) URL.revokeObjectURL(createdQrObjectUrl);
+  createdQrObjectUrl = null;
+  $("#created-result").hidden = true;
+  $("#created-url").removeAttribute("href");
+  $("#created-url").textContent = "";
+  $("#open-created").removeAttribute("href");
+  $("#copy-created").onclick = null;
+  $("#created-qr").replaceChildren();
+  $("#created-qr").setAttribute("aria-busy", "false");
+  $("#created-sharing-note").textContent = "";
+  $("#created-sharing-note").hidden = true;
+}
+
+async function loadCreatedQr(link) {
+  const request = ++createdQrRequest;
+  const container = $("#created-qr");
+  if (createdQrObjectUrl) URL.revokeObjectURL(createdQrObjectUrl);
+  createdQrObjectUrl = null;
+  container.replaceChildren(
+    element("p", "chart-loading", "Creating your QR code…"),
+  );
+  container.setAttribute("aria-busy", "true");
+  try {
+    const blob = await api(
+      `/links/${encodeURIComponent(link.code)}/qr.svg`,
+      {},
+      true,
+    );
+    if (request !== createdQrRequest) return;
+    createdQrObjectUrl = URL.createObjectURL(blob);
+    fillQrPreview(container, blob, createdQrObjectUrl, link);
+  } catch (error) {
+    if (request !== createdQrRequest || error.name === "StaleRequest") return;
+    const message = element(
+      "p",
+      "qr-error",
+      `Your link is ready. QR code unavailable: ${error.message}`,
+    );
+    const retry = element("button", "button button-small", "Retry QR code");
+    retry.type = "button";
+    retry.addEventListener("click", () => loadCreatedQr(link));
+    container.replaceChildren(message, retry);
+  } finally {
+    if (request === createdQrRequest)
+      container.setAttribute("aria-busy", "false");
+  }
+}
+
 function renderDetails(link) {
   const container = $("#detail-content");
   container.replaceChildren();
@@ -540,43 +623,37 @@ function renderDetails(link) {
     }
     qrButton.disabled = true;
     const epoch = sessionEpoch;
+    const request = detailRequest;
     try {
       const blob = await api(
         `/links/${encodeURIComponent(link.code)}/qr.svg`,
         {},
         true,
       );
-      if (epoch !== sessionEpoch || !qrSection.isConnected) return;
+      if (
+        epoch !== sessionEpoch ||
+        request !== detailRequest ||
+        !qrSection.isConnected
+      )
+        return;
       if (qrObjectUrl) URL.revokeObjectURL(qrObjectUrl);
       qrObjectUrl = URL.createObjectURL(blob);
-      const picture = element("img");
-      picture.src = qrObjectUrl;
-      picture.alt = `QR code for ${linkName(link)}`;
-      picture.width = 192;
-      picture.height = 192;
-      const download = element(
-        "button",
-        "button button-small",
-        "Download QR (SVG)",
-      );
-      download.type = "button";
-      download.addEventListener("click", () =>
-        downloadBlob(blob, `${link.code}.svg`),
-      );
-      qrPreview.replaceChildren(
-        picture,
-        download,
+      fillQrPreview(qrPreview, blob, qrObjectUrl, link);
+      qrPreview.append(
         element(
           "small",
           "",
           "Scanning opens the short link and counts a click.",
         ),
       );
+      const note = sharingNote(link.short_url);
+      if (note) qrPreview.append(element("small", "sharing-note", note));
       qrPreview.hidden = false;
       qrButton.textContent = "Hide QR code";
       qrButton.setAttribute("aria-expanded", "true");
     } catch (error) {
-      if (error.name !== "StaleRequest") toast(error.message);
+      if (request === detailRequest && error.name !== "StaleRequest")
+        toast(error.message);
     } finally {
       qrButton.disabled = false;
     }
@@ -796,9 +873,15 @@ $("#create-form").addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify(payload),
     });
+    clearCreatedResult();
     $("#created-url").textContent = link.short_url;
     $("#created-url").href = link.short_url;
+    $("#open-created").href = link.short_url;
     $("#created-result").hidden = false;
+    const note = sharingNote(link.short_url);
+    $("#created-sharing-note").textContent = note;
+    $("#created-sharing-note").hidden = !note;
+    loadCreatedQr(link);
     $("#copy-created").onclick = () =>
       copyLink(link.short_url, $("#copy-created"));
     $("#create-form").reset();
@@ -916,9 +999,8 @@ function showSignIn(message = "") {
   $("#import-panel").hidden = true;
   $("#import-toggle").setAttribute("aria-expanded", "false");
   $("#import-form").reset();
-  $("#created-result").hidden = true;
-  $("#created-url").removeAttribute("href");
-  $("#created-url").textContent = "";
+  $("#more-tools").open = false;
+  clearCreatedResult();
   $("#create-form").reset();
   $("#custom-expiry-field").hidden = true;
   $("#custom-expiry").required = false;

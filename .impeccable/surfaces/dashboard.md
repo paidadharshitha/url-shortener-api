@@ -21,3 +21,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 ## Version 2 extension
 
 Preserve the established notebook identity. Introduce a compact sign-in/create-account entry, an account control with sign-out, explicit UTC analytics ranges, inline CSV import with row-by-row outcomes, filtered CSV export, and QR preview/download in link details. Every management view is scoped to the authenticated owner. QR codes encode the public short URL. Screenshots use a separate QA database with visibly named Demo links and actual clicks; no illustrative analytics are presented as user activity.
+
+## Direct sharing flow
+
+The user prioritizes URL input → short link plus automatic QR preview → copy, open, or download. Show that result immediately after successful creation. QR loading failure leaves the working short link available with a QR-only retry. Put CSV import/export behind a collapsed More tools disclosure. Keep the notebook identity and original API behavior. Explain on localhost results that phone sharing requires a publicly reachable hosted address.

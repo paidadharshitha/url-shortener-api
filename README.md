@@ -41,6 +41,8 @@ Open the dashboard at <http://localhost:8000>. Interactive API documentation is 
 
 Create an account in the dashboard, then sign in to your private workspace. Authentication is required for link creation, management, statistics, and downloads. Short-link redirects remain public. Each account can access only its own links; aliases are unique across all accounts.
 
+Paste a destination URL and click **Shorten link**. The result immediately shows the short URL and its QR code, ready to copy, scan, or download. Open the collapsed **More tools** section when you need CSV import or export.
+
 ### Configuration
 
 | Variable | Default | Purpose |
@@ -67,7 +69,7 @@ Open <http://localhost:8001>. The command-level `BASE_URL` overrides the value i
 After starting the service, demonstrate the required behavior in this order:
 
 1. Create an account in the dashboard. For API review, follow [Create an account and authenticate](#create-an-account-and-authenticate), then paste the returned token into Swagger's **Authorize** control at `/docs`.
-2. Create a link to `https://www.wikipedia.org/` with an unused alias, such as `review-demo`. Expect `201`, the chosen `code`, and a `short_url`. Create another without an alias to check automatic code generation.
+2. Paste `https://www.wikipedia.org/` in the dashboard and click **Shorten link**. The short URL and QR code appear automatically. For API review, create a link with an unused alias, such as `review-demo`: expect `201`, the chosen `code`, and a `short_url`. Create another without an alias to check automatic code generation.
 3. Read the new link's stats: expect `total_clicks: 0` and `last_clicked_at: null`. Request its short URL once: expect `302` to the destination. Read stats again: expect `1` and a timestamp. In the dashboard, return and click **Refresh** to see the count.
 4. Try the same alias again: expect `409`. Submit `not-a-url` as the destination: expect `422`. Request a code that was never created: expect `404`.
 5. Create another link with a future expiry. At or after that instant its redirect must return `410`, without adding a click. The automated expiry test uses a controlled clock, so it checks this boundary without waiting.
@@ -321,9 +323,13 @@ curl --fail-with-body http://localhost:8000/links/launch/qr.svg \
   -H "Authorization: Bearer $TOKEN" --output launch.svg
 ```
 
-QR codes are generated locally as SVG files and encode the complete short URL. Downloading a QR code does not count a click; visiting its encoded link does. A phone needs to reach the configured `BASE_URL`, so a QR code using `localhost` is for testing on the server's own machine. Another user's code returns `404`.
+The dashboard shows a QR code automatically after creating a link. QR codes are generated locally as SVG files and encode the complete short URL. Opening the scanned URL goes through the short-link redirect to the destination and records one click when that redirect succeeds. Generating, displaying, or downloading the QR code does not add a click. Another user's code returns `404`.
+
+On a phone, `localhost` means the phone itself, so it cannot open a QR link pointing to a server running on your computer at `localhost`. Use an address the phone can reach and set `BASE_URL` to that address before creating a QR code.
 
 ### Export links to CSV
+
+In the dashboard, expand **More tools** and choose **Export CSV**.
 
 ```bash
 curl --fail-with-body --get http://localhost:8000/links/export.csv \
@@ -337,6 +343,8 @@ Export uses the same `q` and `status` filters as the list endpoint and includes 
 The UTF-8 CSV includes a byte-order mark for spreadsheet compatibility. Potential formula cells are prefixed with an apostrophe to prevent spreadsheet execution. Exporting does not record clicks. The export is a report; its columns differ from the import template below.
 
 ### Bulk shortening from CSV
+
+In the dashboard, expand **More tools**, choose **Import CSV**, select a file, and click **Import links**.
 
 Create `links-to-import.csv` with a required `url` column and optional `title`, `alias`, and `expires_at` columns:
 
@@ -448,17 +456,17 @@ These additions support sharing and tracking workflows beyond the original requi
 | Feature | What it helps the link owner do | Where to find it |
 | --- | --- | --- |
 | Private accounts | Keep link management and statistics separate for each owner. | Create account / Sign in; `/auth/*` |
-| QR download | Put the same short link on printed material or a screen for scanning. | Link details → **Show QR code**; `/links/{code}/qr.svg` |
-| Bulk CSV import | Create many short links without entering each destination separately. | **Import CSV** → choose a file → **Import links**; `/links/bulk` |
-| CSV export | Review or share a spreadsheet report of links, statuses, and click totals. | **Export CSV**; `/links/export.csv` |
+| QR preview and download | Put the same short link on printed material or a screen for scanning. | Appears automatically after **Shorten link**; `/links/{code}/qr.svg` |
+| Bulk CSV import | Create many short links without entering each destination separately. | **More tools** → **Import CSV** → choose a file → **Import links**; `/links/bulk` |
+| CSV export | Review or share a spreadsheet report of links, statuses, and click totals. | **More tools** → **Export CSV**; `/links/export.csv` |
 | Date-range analytics | Inspect clicks during a selected period while retaining lifetime totals. | **Click activity** → 7/30/90 days or custom dates |
 | Rate limits | Bound repeated API requests, link creation, and login attempts. | Enforced automatically; `429` responses include `Retry-After` |
 
 For a quick bulk demonstration, upload [examples/import-demo.csv](examples/import-demo.csv). It contains three valid destinations with labels and no fixed aliases; the service generates their codes. Export afterward to inspect the resulting link report. Export files include reporting columns; use the import example's format when preparing a new upload.
 
-![Shortlink v2 dashboard with three Demo-labelled links from isolated local QA](docs/dashboard.jpg)
+![Shortlink dashboard showing an automatically generated QR code and four Demo-labelled links](docs/dashboard.jpg)
 
-Preview uses three Demo-labelled links and five actual test clicks from an isolated local QA database; it does not show customer activity.
+Preview uses four Demo-labelled links and six actual test clicks from an isolated local QA database; it does not show customer activity.
 
 ## Design and scope
 
