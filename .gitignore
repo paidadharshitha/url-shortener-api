@@ -15,3 +15,6 @@ data/
 build/
 dist/
 .DS_Store
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/config.local.json

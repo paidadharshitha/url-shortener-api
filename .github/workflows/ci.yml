@@ -51,7 +51,7 @@ jobs:
           curl --fail --silent --show-error \
             --retry 20 --retry-delay 1 --retry-connrefused --retry-all-errors \
             http://127.0.0.1:8000/docs > /dev/null
-      - name: Verify creation, redirect, and statistics
+      - name: Verify dashboard, management, redirects, and statistics
         run: |
           python3 - <<'PY'
           import http.client
@@ -67,26 +67,57 @@ jobs:
                       headers={"Content-Type": "application/json"},
                   )
                   response = connection.getresponse()
-                  return response.status, response.getheader("Location"), response.read()
+                  headers = {name.lower(): value for name, value in response.getheaders()}
+                  return response.status, headers, response.read()
               finally:
                   connection.close()
 
+          status, headers, body = request("GET", "/")
+          assert status == 200, (status, body)
+          assert "text/html" in headers.get("content-type", ""), headers
+          assert b"<html" in body.lower(), body
+
+          status, headers, body = request("GET", "/assets/app.js")
+          assert status == 200, (status, body)
+          assert "javascript" in headers.get("content-type", ""), headers
+          assert body, "Dashboard JavaScript is empty."
+
           status, _, body = request("POST", "/links", {
-              "url": "https://example.com/smoke", "alias": "smoke-link"
+              "url": "https://example.com/smoke", "alias": "smoke-link", "title": "Smoke test"
           })
           assert status == 201, (status, body)
           assert json.loads(body)["code"] == "smoke-link", body
 
-          status, location, body = request("GET", "/smoke-link")
+          status, headers, body = request("GET", "/smoke-link")
           assert status == 302, (status, body)
-          assert location == "https://example.com/smoke", location
+          assert headers.get("location") == "https://example.com/smoke", headers
 
           status, _, body = request("GET", "/links/smoke-link/stats")
           assert status == 200, (status, body)
           stats = json.loads(body)
           assert stats["total_clicks"] == 1, stats
           assert stats["last_clicked_at"] is not None, stats
-          print("Creation, redirect, and click statistics passed.")
+
+          status, _, body = request("PATCH", "/links/smoke-link", {"is_active": False})
+          assert status == 200, (status, body)
+          assert json.loads(body)["is_active"] is False, body
+          status, _, body = request("GET", "/smoke-link")
+          assert status == 410, (status, body)
+          assert "paused" in json.loads(body)["detail"].lower(), body
+          status, _, body = request("GET", "/links/smoke-link/stats")
+          assert status == 200, (status, body)
+          assert json.loads(body)["total_clicks"] == 1, body
+
+          status, _, body = request("PATCH", "/links/smoke-link", {"is_active": True})
+          assert status == 200, (status, body)
+          assert json.loads(body)["is_active"] is True, body
+          status, headers, body = request("GET", "/smoke-link")
+          assert status == 302, (status, body)
+          assert headers.get("location") == "https://example.com/smoke", headers
+          status, _, body = request("GET", "/links/smoke-link/stats")
+          assert status == 200, (status, body)
+          assert json.loads(body)["total_clicks"] == 2, body
+          print("Dashboard, creation, pause/resume, redirects, and statistics passed.")
           PY
       - name: Restart container and verify persistence
         run: |
@@ -103,7 +134,7 @@ jobs:
               stats = json.load(response)
           assert stats["code"] == "smoke-link", stats
           assert stats["url"] == "https://example.com/smoke", stats
-          assert stats["total_clicks"] == 1, stats
+          assert stats["total_clicks"] == 2, stats
           assert stats["last_clicked_at"] is not None, stats
           print("Link and click statistics persisted after restart.")
           PY
